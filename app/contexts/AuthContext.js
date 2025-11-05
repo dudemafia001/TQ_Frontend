@@ -14,15 +14,22 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
     // Check if user is logged in on mount
-    const storedUser = localStorage.getItem('username');
-    if (storedUser) {
-      setUser(storedUser);
+    if (isClient) {
+      const storedUser = localStorage.getItem('username');
+      if (storedUser) {
+        setUser(storedUser);
+      }
     }
     setLoading(false);
-  }, []);
+  }, [isClient]);
 
   const login = (username) => {
     localStorage.setItem('username', username);

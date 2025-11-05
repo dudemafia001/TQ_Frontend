@@ -15,24 +15,31 @@ export const useAdmin = () => {
 export const AdminProvider = ({ children }) => {
   const [admin, setAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
     // Check if admin is logged in on mount
-    const storedAdmin = localStorage.getItem('adminData');
-    if (storedAdmin) {
-      try {
-        const adminData = JSON.parse(storedAdmin);
-        setAdmin(adminData);
-      } catch (error) {
-        localStorage.removeItem('adminData');
+    if (isClient) {
+      const storedAdmin = localStorage.getItem('adminData');
+      if (storedAdmin) {
+        try {
+          const adminData = JSON.parse(storedAdmin);
+          setAdmin(adminData);
+        } catch (error) {
+          localStorage.removeItem('adminData');
+        }
       }
     }
     setLoading(false);
-  }, []);
+  }, [isClient]);
 
   const login = async (username, password) => {
     try {
-      const response = await fetch(buildApiUrl(config.api.endpoints.admin.login), {
+      const response = await fetch(buildApiUrl('/api/admin/login'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -42,27 +49,26 @@ export const AdminProvider = ({ children }) => {
 
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
+      if (response.ok) {
+        setAdmin(data);
+        if (isClient) {
+          localStorage.setItem('adminData', JSON.stringify(data));
+        }
+        return { success: true, data };
+      } else {
+        return { success: false, message: data.message };
       }
-
-      const adminData = {
-        userId: data.userId,
-        username: data.username,
-        role: data.role
-      };
-
-      localStorage.setItem('adminData', JSON.stringify(adminData));
-      setAdmin(adminData);
-      return { success: true };
     } catch (error) {
-      return { success: false, message: error.message };
+      console.error('Login error:', error);
+      return { success: false, message: 'Network error occurred' };
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('adminData');
     setAdmin(null);
+    if (isClient) {
+      localStorage.removeItem('adminData');
+    }
   };
 
   const value = {

@@ -22,28 +22,35 @@ const LocationContext = createContext<LocationContextType | undefined>(undefined
 export function LocationProvider({ children }: { children: ReactNode }) {
   const [userLocation, setUserLocationState] = useState<LocationData | null>(null);
   const [deliveryAvailable, setDeliveryAvailableState] = useState<boolean | null>(null);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
     // Load location from localStorage on mount
-    const savedLocation = localStorage.getItem('userLocation');
-    if (savedLocation) {
-      try {
-        const locationData = JSON.parse(savedLocation);
-        // Check if location is not too old (24 hours)
-        const isRecent = (Date.now() - locationData.timestamp) < 24 * 60 * 60 * 1000;
-        if (isRecent) {
-          setUserLocationState(locationData);
-          setDeliveryAvailableState(locationData.isWithinDeliveryRadius);
+    if (isClient) {
+      const savedLocation = localStorage.getItem('userLocation');
+      if (savedLocation) {
+        try {
+          const locationData = JSON.parse(savedLocation);
+          // Check if location is not too old (24 hours)
+          const isRecent = (Date.now() - locationData.timestamp) < 24 * 60 * 60 * 1000;
+          if (isRecent) {
+            setUserLocationState(locationData);
+            setDeliveryAvailableState(locationData.isWithinDeliveryRadius);
+          }
+        } catch (error) {
+          console.error("Error parsing saved location:", error);
         }
-      } catch (error) {
-        console.error("Error parsing saved location:", error);
       }
     }
-  }, []);
+  }, [isClient]);
 
   const setUserLocation = (location: LocationData | null) => {
     setUserLocationState(location);
-    if (location) {
+    if (location && isClient) {
       // Save to localStorage with timestamp
       const locationWithTimestamp = {
         ...location,
@@ -55,7 +62,7 @@ export function LocationProvider({ children }: { children: ReactNode }) {
 
   const setDeliveryAvailable = (available: boolean | null) => {
     setDeliveryAvailableState(available);
-    if (available !== null && userLocation) {
+    if (available !== null && userLocation && isClient) {
       // Update localStorage with delivery status
       const locationWithTimestamp = {
         ...userLocation,
@@ -69,7 +76,9 @@ export function LocationProvider({ children }: { children: ReactNode }) {
   const clearLocation = () => {
     setUserLocationState(null);
     setDeliveryAvailableState(null);
-    localStorage.removeItem('userLocation');
+    if (isClient) {
+      localStorage.removeItem('userLocation');
+    }
   };
 
   return (
