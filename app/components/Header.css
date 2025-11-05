@@ -1,0 +1,509 @@
+/* Unified Header Styles */
+.unified-header {
+  background: #fff;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  border-bottom: 1px solid #f1f5f9;
+  margin: 0;
+  padding: 0;
+}
+
+.header-container {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+@media (min-width: 769px) {
+  .header-container {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    align-items: center;
+    justify-items: center;
+  }
+  
+  .header-brand {
+    justify-self: start;
+  }
+  
+  .desktop-nav {
+    justify-self: center;
+  }
+  
+  .header-icons {
+    justify-self: end;
+  }
+}
+
+/* Navigation now takes left position */
+.header-nav {
+  display: flex;
+  gap: 32px;
+  align-items: center;
+}
+
+
+
+.nav-item {
+  color: #4a5568;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 16px;
+  padding: 8px 0;
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+.nav-item:hover {
+  color: #B8860B;
+}
+
+.nav-item::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(135deg, #B8860B, #DAA520);
+  transition: width 0.3s ease;
+}
+
+.nav-item:hover::after {
+  width: 100%;
+}
+
+/* Header Icons */
+.header-icons {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.header-icon-btn {
+  background: transparent;
+  border: none;
+  padding: 8px;
+  border-radius: 50%;
+  color: #2d3748;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+}
+
+.header-icon-btn:hover {
+  background: transparent;
+  color: #2d3748;
+  transform: scale(1.1);
+}
+
+/* Specific styling for user icon to make it more visible */
+.user-btn {
+  background: transparent !important;
+}
+
+.user-btn:hover {
+  background: transparent !important;
+}
+
+/* User Dropdown */
+.user-dropdown-container {
+  position: relative;
+}
+
+.user-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e2e8f0;
+  min-width: 200px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  z-index: 1001;
+  margin-top: 8px;
+}
+
+.user-dropdown.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.dropdown-header {
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 14px;
+}
+
+.dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 12px 20px;
+  color: #4a5568;
+  text-decoration: none;
+  font-size: 14px;
+  border: none;
+  background: none;
+  text-align: left;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.dropdown-item:hover {
+  background: #f7fafc;
+  color: #B8860B;
+}
+
+.logout-btn {
+  color: #e53e3e !important;
+}
+
+.logout-btn:hover {
+  background: #fed7d7 !important;
+  color: #c53030 !important;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: #f1f5f9;
+  margin: 8px 0;
+}
+
+/* Cart Badge */
+.cart-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: #e53e3e;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 50%;
+  min-width: 20px;
+  height: 20px;
+  text-align: center;
+  line-height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .header-nav {
+    gap: 24px;
+  }
+  
+  .header-container {
+    padding: 12px 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Show mobile elements */
+  .header-brand {
+    display: block !important;
+  }
+  
+  .hamburger-btn {
+    display: flex !important;
+  }
+  
+  /* Hide desktop navigation */
+  .desktop-nav {
+    display: none !important;
+  }
+  
+
+  
+  /* Adjust logo size for mobile */
+  .logo-icon svg {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .logo-main {
+    font-size: 18px;
+  }
+  
+  .header-container {
+    padding: 10px 16px;
+    justify-content: space-between;
+  }
+  
+  .header-icons {
+    gap: 12px;
+  }
+  
+  .header-icon-btn {
+    width: 36px;
+    height: 36px;
+    padding: 6px;
+  }
+  
+  .header-icon-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-container {
+    padding: 8px 12px;
+  }
+  
+  .brand-text {
+    font-size: 18px;
+  }
+  
+  .header-icons {
+    gap: 8px;
+  }
+  
+  .header-icon-btn {
+    width: 32px;
+    height: 32px;
+    padding: 4px;
+  }
+  
+  .header-icon-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .mobile-menu-overlay {
+    width: 100vw;
+  }
+}
+
+/* Brand/Logo */
+.header-brand {
+  display: block; /* Show on all devices */
+}
+
+.brand-link {
+  text-decoration: none;
+  color: #2d3748;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-icon svg {
+  width: 32px;
+  height: 32px;
+}
+
+.logo-text {
+  display: flex;
+  align-items: center;
+}
+
+.logo-main {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-weight: 700;
+  font-size: 22px;
+  color: #1a1a1a;
+  letter-spacing: -0.5px;
+}
+
+/* Make the "T" in "The" styling similar to original logo */
+.logo-main::first-letter {
+  font-size: 24px;
+  font-weight: 800;
+}
+
+/* Hamburger Menu Button */
+.hamburger-btn {
+  display: none;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 30px;
+  height: 30px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.hamburger-line {
+  width: 25px;
+  height: 3px;
+  background-color: #2d3748;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+  transform-origin: center;
+}
+
+.hamburger-line.active:nth-child(1) {
+  transform: rotate(45deg) translate(6px, 6px);
+}
+
+.hamburger-line.active:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger-line.active:nth-child(3) {
+  transform: rotate(-45deg) translate(6px, -6px);
+}
+
+/* Mobile Menu Overlay */
+.mobile-menu-overlay {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 280px;
+  height: 100vh;
+  background: #fff;
+  box-shadow: -2px 0 20px rgba(0, 0, 0, 0.1);
+  z-index: 9999;
+  transition: right 0.3s ease;
+  padding-top: 0;
+}
+
+.mobile-menu-overlay.show {
+  right: 0;
+}
+
+.mobile-menu-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9998;
+}
+
+.mobile-menu-header {
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.mobile-menu-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #666;
+  cursor: pointer;
+  padding: 5px;
+  transition: color 0.3s ease;
+}
+
+.mobile-menu-close:hover {
+  color: #B8860B;
+}
+
+.mobile-menu-content {
+  padding: 20px;
+  height: calc(100% - 80px);
+  overflow-y: auto;
+}
+
+.mobile-menu-heading {
+  color: #2d3748;
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.mobile-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.mobile-nav-item {
+  color: #2d3748;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 18px;
+  padding: 16px 0;
+  border-bottom: 1px solid #f1f5f9;
+  transition: color 0.3s ease;
+  background: none;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+}
+
+.mobile-nav-item:hover {
+  color: #B8860B;
+}
+
+.mobile-nav-item:last-child {
+  border-bottom: none;
+}
+
+.mobile-user-section {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 2px solid #f1f5f9;
+}
+
+.mobile-user-info {
+  padding: 16px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.mobile-user-name {
+  font-weight: 600;
+  color: #B8860B;
+  font-size: 16px;
+}
+
+.mobile-nav-item.logout-btn {
+  color: #e53e3e;
+  font-weight: 600;
+}
+
+.mobile-nav-item.logout-btn:hover {
+  color: #c53030;
+}
+
+/* Focus states for accessibility */
+.header-icon-btn:focus,
+.nav-item:focus,
+.dropdown-item:focus {
+  outline: 2px solid #B8860B;
+  outline-offset: 2px;
+}
