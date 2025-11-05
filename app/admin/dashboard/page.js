@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useAdmin } from '../../contexts/AdminContext';
 import { useRouter } from 'next/navigation';
 import config, { buildApiUrl } from '../../../config';
@@ -51,14 +51,16 @@ export default function AdminDashboard() {
       fetchAllOrdersInitial();
       fetchAnalytics();
     }
-  }, [isAuthenticated, fetchAllOrdersInitial, fetchAnalytics]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
 
   // Load queries when queries section is active
   useEffect(() => {
     if (isAuthenticated && activeSection === 'queries') {
       fetchQueries();
     }
-  }, [isAuthenticated, activeSection, fetchQueries]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, activeSection]);
 
   // Load orders when filters are applied
   useEffect(() => {
@@ -73,9 +75,10 @@ export default function AdminDashboard() {
       // Always refresh analytics when filters change
       fetchAnalytics();
     }
-  }, [appliedFilters, isAuthenticated, fetchOrders, fetchAllOrdersInitial, fetchAnalytics]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appliedFilters, isAuthenticated]);
 
-  const fetchAllOrdersInitial = useCallback(async () => {
+  const fetchAllOrdersInitial = async () => {
     try {
       // Fetch all orders without any filters
       const queryParams = new URLSearchParams({
@@ -93,9 +96,9 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error('Error fetching initial orders:', error);
     }
-  }, []);
+  };
 
-  const fetchOrders = useCallback(async () => {
+  const fetchOrders = async () => {
     try {
       const queryParams = new URLSearchParams({
         ...appliedFilters,
@@ -112,9 +115,9 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error('Error fetching orders:', error);
     }
-  }, [appliedFilters]);
+  };
 
-  const fetchAnalytics = useCallback(async () => {
+  const fetchAnalytics = async () => {
     try {
       const queryParams = new URLSearchParams();
       if (appliedFilters.startDate) queryParams.append('startDate', appliedFilters.startDate);
@@ -129,7 +132,7 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error('Error fetching analytics:', error);
     }
-  }, [appliedFilters]);
+  };
 
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
@@ -187,7 +190,7 @@ export default function AdminDashboard() {
   };
 
   // Queries management functions
-  const fetchQueries = useCallback(async () => {
+  const fetchQueries = async () => {
     try {
       setQueriesLoading(true);
       const { status, page, limit } = queriesFilters;
@@ -210,7 +213,7 @@ export default function AdminDashboard() {
     } finally {
       setQueriesLoading(false);
     }
-  }, [queriesFilters]);
+  };
 
   const handleViewQuery = async (queryId) => {
     try {
