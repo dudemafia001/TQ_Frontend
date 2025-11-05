@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAdmin } from '../../contexts/AdminContext';
 import { useRouter } from 'next/navigation';
 import config, { buildApiUrl } from '../../../config';
@@ -24,7 +24,6 @@ export default function AdminDashboard() {
     startDate: '',
     endDate: ''
   });
-  const [isLoadingData, setIsLoadingData] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -52,14 +51,14 @@ export default function AdminDashboard() {
       fetchAllOrdersInitial();
       fetchAnalytics();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, fetchAllOrdersInitial, fetchAnalytics]);
 
   // Load queries when queries section is active
   useEffect(() => {
     if (isAuthenticated && activeSection === 'queries') {
       fetchQueries();
     }
-  }, [isAuthenticated, activeSection, queriesFilters]);
+  }, [isAuthenticated, activeSection, fetchQueries]);
 
   // Load orders when filters are applied
   useEffect(() => {
@@ -74,11 +73,10 @@ export default function AdminDashboard() {
       // Always refresh analytics when filters change
       fetchAnalytics();
     }
-  }, [appliedFilters]);
+  }, [appliedFilters, isAuthenticated, fetchOrders, fetchAllOrdersInitial, fetchAnalytics]);
 
-  const fetchAllOrdersInitial = async () => {
+  const fetchAllOrdersInitial = useCallback(async () => {
     try {
-      setIsLoadingData(true);
       // Fetch all orders without any filters
       const queryParams = new URLSearchParams({
         status: 'all',
@@ -94,12 +92,10 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error('Error fetching initial orders:', error);
-    } finally {
-      setIsLoadingData(false);
     }
-  };
+  }, []);
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       const queryParams = new URLSearchParams({
         ...appliedFilters,
@@ -116,9 +112,9 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error('Error fetching orders:', error);
     }
-  };
+  }, [appliedFilters]);
 
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = useCallback(async () => {
     try {
       const queryParams = new URLSearchParams();
       if (appliedFilters.startDate) queryParams.append('startDate', appliedFilters.startDate);
@@ -132,10 +128,8 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error('Error fetching analytics:', error);
-    } finally {
-      setIsLoadingData(false);
     }
-  };
+  }, [appliedFilters]);
 
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
@@ -193,7 +187,7 @@ export default function AdminDashboard() {
   };
 
   // Queries management functions
-  const fetchQueries = async () => {
+  const fetchQueries = useCallback(async () => {
     try {
       setQueriesLoading(true);
       const { status, page, limit } = queriesFilters;
@@ -216,7 +210,7 @@ export default function AdminDashboard() {
     } finally {
       setQueriesLoading(false);
     }
-  };
+  }, [queriesFilters]);
 
   const handleViewQuery = async (queryId) => {
     try {
@@ -286,16 +280,6 @@ export default function AdminDashboard() {
       case 'closed': return 'status-closed';
       default: return '';
     }
-  };
-
-  const formatQueryStatus = (status) => {
-    const statuses = {
-      new: 'New',
-      in_progress: 'In Progress',
-      resolved: 'Resolved',
-      closed: 'Closed'
-    };
-    return statuses[status] || status;
   };
 
   const closeMobileMenu = () => {

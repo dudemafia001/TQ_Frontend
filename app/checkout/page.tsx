@@ -359,7 +359,7 @@ export default function CheckoutPage() {
     // Check if location is selected
     if (!userLocation || !userLocation.lat || !userLocation.lng) {
       alert('Please select your delivery location on the map first');
-      setIsZomatoModalOpen(true);
+      setShowLocationModal(true);
       return false;
     }
     
@@ -845,7 +845,7 @@ export default function CheckoutPage() {
       <ZomatoLocationModal 
         isOpen={showLocationModal}
         onClose={() => setShowLocationModal(false)}
-        onLocationSet={(locationData) => {
+        onLocationSet={(locationData: any) => {
           setUserLocation({
             lat: locationData.lat,
             lng: locationData.lng,

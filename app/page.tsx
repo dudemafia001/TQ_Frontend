@@ -14,9 +14,9 @@ import "./components/ZomatoLocationModal.css";
 export default function Home() {
   const router = useRouter();
   const pathname = usePathname();
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedVariants, setSelectedVariants] = useState({});
+  const [selectedVariants, setSelectedVariants] = useState<{[key: string]: string}>({});
   const [showLocationPrompt, setShowLocationPrompt] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [locationError, setLocationError] = useState("");
@@ -103,7 +103,7 @@ export default function Home() {
   useEffect(() => {
     // ✅ Load Bootstrap only on client
     import("bootstrap/dist/js/bootstrap.bundle.min.js")
-      .then((bootstrap) => {
+      .then((bootstrap: any) => {
         console.log("✅ Bootstrap JS loaded");
         const modalEl = document.getElementById("cartModal");
         if (modalEl) {
@@ -512,7 +512,7 @@ export default function Home() {
       <ZomatoLocationModal 
         isOpen={showLocationPrompt && pathname === '/'}
         onClose={() => setShowLocationPrompt(false)}
-        onLocationSet={(locationData) => {
+        onLocationSet={(locationData: any) => {
           setUserLocation({
             lat: locationData.lat,
             lng: locationData.lng,

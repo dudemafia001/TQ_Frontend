@@ -1,5 +1,6 @@
 "use client";
 import React from 'react';
+import Link from 'next/link';
 import './about.css';
 
 export default function AboutPage() {
@@ -15,7 +16,7 @@ export default function AboutPage() {
             made with love and the finest ingredients.
           </p>
           <p className="hero-subtitle">
-            Whether you're ordering your daily meal or planning food for a special occasion, we ensure every bite feels like home.
+            Whether you&apos;re ordering your daily meal or planning food for a special occasion, we ensure every bite feels like home.
           </p>
           <div className="hero-buttons">
             <button className="cta-primary" onClick={() => window.location.href = '/'}>
@@ -35,7 +36,7 @@ export default function AboutPage() {
               without compromising on quality or freshness.
             </p>
             <p>
-              What began as a small kitchen with a handful of dishes has now grown into Kanpur's favorite vegetarian 
+              What began as a small kitchen with a handful of dishes has now grown into Kanpur&apos;s favorite vegetarian 
               cloud kitchen, loved for its flavorful curries, soft naans, and comforting thalis.
             </p>
             <p>
@@ -117,7 +118,7 @@ export default function AboutPage() {
             </div>
           </div>
           <p className="features-tagline">
-            We believe great food doesn't just fill your stomach — it fills your day with joy.
+            We believe great food doesn&apos;t just fill your stomach — it fills your day with joy.
           </p>
         </div>
       </section>
@@ -145,7 +146,7 @@ export default function AboutPage() {
           <h2 className="section-title">Our Promise</h2>
           <div className="values-content">
             <p>
-              We're proud to be a part of Kanpur's food culture and constantly strive to serve the community 
+              We&apos;re proud to be a part of Kanpur&apos;s food culture and constantly strive to serve the community 
               with love, integrity, and flavor.
             </p>
             <p>
@@ -159,7 +160,7 @@ export default function AboutPage() {
       {/* CTA / Contact Section */}
       <section className="contact-cta-section">
         <div className="container">
-          <h2 className="section-title">Don't let your hunger wait!!! We Deliver.</h2>
+          <h2 className="section-title">Don&apos;t let your hunger wait!!! We Deliver.</h2>
           <p className="contact-subtitle">Planning a party or simply craving homestyle food?</p>
           
           <div className="contact-options">
@@ -174,7 +175,7 @@ export default function AboutPage() {
               <span className="contact-icon">🌐</span>
               <div className="contact-details">
                 <span className="contact-label">Order Online</span>
-                <a href="/" className="contact-link">thequisine.in</a>
+                <Link href="/" className="contact-link">thequisine.in</Link>
               </div>
             </div>
           </div>
