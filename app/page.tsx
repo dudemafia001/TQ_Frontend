@@ -1,9 +1,12 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./menu.css";
+import Image from "next/image";
+import { useAuth } from "./contexts/AuthContext";
 import { useCart } from "./contexts/CartContext";
+import config, { buildApiUrl } from "../config";
 import { useLocation } from "./contexts/LocationContext";
 import ZomatoLocationModal from "./components/ZomatoLocationModal";
 import "./components/ZomatoLocationModal.css";
@@ -111,7 +114,7 @@ export default function Home() {
       })
       .catch((err) => console.error("❌ Bootstrap JS failed", err));
 
-    fetch("http://localhost:5001/api/products")
+    fetch(buildApiUrl(config.api.endpoints.products))
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {

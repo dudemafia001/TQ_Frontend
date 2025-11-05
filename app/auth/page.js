@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../contexts/AuthContext";
+import config, { buildApiUrl } from "../../config";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./auth.css";
 
@@ -44,7 +45,7 @@ export default function AuthPage() {
     setMessage("Sending OTP...");
 
     try {
-      const res = await fetch("http://localhost:5001/api/otp/generate", {
+      const res = await fetch(buildApiUrl(config.api.endpoints.otp.generate), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mobile }),
@@ -77,12 +78,12 @@ export default function AuthPage() {
           return;
         }
 
-        endpoint = "http://localhost:5001/api/auth/signup";
+        endpoint = buildApiUrl(config.api.endpoints.auth.signup);
         body = { username, mobile, password };
       } else {
         // Login flow
         if (loginMethod === "password") {
-          endpoint = "http://localhost:5001/api/auth/login";
+          endpoint = buildApiUrl(config.api.endpoints.auth.login);
           body = { username, password };
         } else {
           // OTP login
@@ -90,7 +91,7 @@ export default function AuthPage() {
             setMessage("Please enter the OTP");
             return;
           }
-          endpoint = "http://localhost:5001/api/otp/verify";
+          endpoint = buildApiUrl(config.api.endpoints.otp.verify);
           body = { mobile, otp };
         }
       }

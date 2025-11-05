@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useAdmin } from '../../contexts/AdminContext';
 import { useRouter } from 'next/navigation';
+import config, { buildApiUrl } from '../../../config';
 import OrderDetailsModal from './OrderDetailsModal';
 import './dashboard.css';
 
@@ -85,7 +86,7 @@ export default function AdminDashboard() {
         limit: '50' // Show more orders initially
       });
 
-      const response = await fetch(`http://localhost:5001/api/admin/orders?${queryParams}`);
+      const response = await fetch(buildApiUrl(`${config.api.endpoints.admin.orders}?${queryParams}`));
       const data = await response.json();
       
       if (response.ok) {
@@ -106,7 +107,7 @@ export default function AdminDashboard() {
         limit: appliedFilters.limit.toString()
       });
 
-      const response = await fetch(`http://localhost:5001/api/admin/orders?${queryParams}`);
+      const response = await fetch(buildApiUrl(`${config.api.endpoints.admin.orders}?${queryParams}`));
       const data = await response.json();
       
       if (response.ok) {
@@ -123,7 +124,7 @@ export default function AdminDashboard() {
       if (appliedFilters.startDate) queryParams.append('startDate', appliedFilters.startDate);
       if (appliedFilters.endDate) queryParams.append('endDate', appliedFilters.endDate);
 
-      const response = await fetch(`http://localhost:5001/api/admin/analytics?${queryParams}`);
+      const response = await fetch(buildApiUrl(`${config.api.endpoints.admin.analytics}?${queryParams}`));
       const data = await response.json();
       
       if (response.ok) {
@@ -140,7 +141,7 @@ export default function AdminDashboard() {
     try {
       // URL encode the orderId to handle special characters like # in TQ1234#
       const encodedOrderId = encodeURIComponent(orderId);
-      const response = await fetch(`http://localhost:5001/api/admin/orders/${encodedOrderId}/status`, {
+      const response = await fetch(buildApiUrl(`${config.api.endpoints.admin.orders}/${encodedOrderId}/status`), {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -165,7 +166,7 @@ export default function AdminDashboard() {
       console.log('Attempting to fetch order:', orderId);
       // URL encode the orderId to handle special characters like # in TQ1234#
       const encodedOrderId = encodeURIComponent(orderId);
-      const response = await fetch(`http://localhost:5001/api/admin/orders/${encodedOrderId}`);
+      const response = await fetch(buildApiUrl(`${config.api.endpoints.admin.orders}/${encodedOrderId}`));
       const data = await response.json();
       
       if (response.ok) {
@@ -202,7 +203,7 @@ export default function AdminDashboard() {
         limit: limit.toString()
       });
 
-      const response = await fetch(`http://localhost:5001/api/contact?${queryParams}`);
+      const response = await fetch(buildApiUrl(`${config.api.endpoints.contact}?${queryParams}`));
       const data = await response.json();
 
       if (response.ok && data.success) {
@@ -219,7 +220,7 @@ export default function AdminDashboard() {
 
   const handleViewQuery = async (queryId) => {
     try {
-      const response = await fetch(`http://localhost:5001/api/contact/${queryId}`);
+      const response = await fetch(buildApiUrl(`${config.api.endpoints.contact}/${queryId}`));
       const data = await response.json();
 
       if (response.ok && data.success) {
@@ -237,7 +238,7 @@ export default function AdminDashboard() {
 
   const updateQueryStatus = async (queryId, newStatus, adminNotes = '') => {
     try {
-      const response = await fetch(`http://localhost:5001/api/contact/${queryId}/status`, {
+      const response = await fetch(buildApiUrl(`${config.api.endpoints.contact}/${queryId}/status`), {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

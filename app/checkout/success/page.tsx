@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/app/contexts/CartContext';
 import { useAuth } from '@/app/contexts/AuthContext';
+import config, { buildApiUrl } from '@/config';
 import './success.css';
 
 export default function CheckoutSuccessPage() {
@@ -19,7 +20,7 @@ export default function CheckoutSuccessPage() {
     // Fetch the latest order to get estimated delivery time
     const fetchLatestOrder = async () => {
       try {
-        const response = await fetch(`http://localhost:5001/api/orders/user/${user}`);
+        const response = await fetch(buildApiUrl(`${config.api.endpoints.orders.user}/${user}`));
         if (response.ok) {
           const orders = await response.json();
           if (orders.length > 0) {

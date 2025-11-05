@@ -1,5 +1,6 @@
 "use client";
 import { createContext, useContext, useState, useEffect } from 'react';
+import config, { buildApiUrl } from '../../config';
 
 const AdminContext = createContext();
 
@@ -31,7 +32,7 @@ export const AdminProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
-      const response = await fetch('http://localhost:5001/api/admin/login', {
+      const response = await fetch(buildApiUrl(config.api.endpoints.admin.login), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

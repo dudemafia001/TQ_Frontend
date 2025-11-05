@@ -1,5 +1,6 @@
 "use client";
 import { useState } from 'react';
+import config, { buildApiUrl } from '../../config';
 import './contact.css';
 
 export default function ContactPage() {
@@ -27,7 +28,7 @@ export default function ContactPage() {
     setIsSubmitting(true);
     
     try {
-      const response = await fetch('http://localhost:5001/api/contact', {
+      const response = await fetch(buildApiUrl(config.api.endpoints.contact), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

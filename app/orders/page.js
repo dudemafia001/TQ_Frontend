@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useRouter } from "next/navigation";
+import config, { buildApiUrl, buildWhatsAppUrl } from "../../config";
 import "./orders.css";
 
 export default function OrdersPage() {
@@ -69,7 +70,7 @@ export default function OrdersPage() {
     // Fetch user orders
     const fetchOrders = async () => {
       try {
-        const response = await fetch(`http://localhost:5001/api/orders/user/${user}`);
+        const response = await fetch(buildApiUrl(`${config.api.endpoints.orders.user}/${user}`));
         const data = await response.json();
         
         if (data.success) {
@@ -139,7 +140,7 @@ export default function OrdersPage() {
         <div className="col-12">
           <h1>My Orders</h1>
           <div className="alert alert-info mb-3">
-            <i className="fas fa-phone"></i> For any queries regarding your orders, call us at: <strong>7992132123</strong>
+            <i className="fas fa-phone"></i> For any queries regarding your orders, call us at: <strong>{config.services.phone.support}</strong>
           </div>
           
           {error && (
@@ -235,13 +236,13 @@ export default function OrdersPage() {
                       {order.orderStatus !== 'delivered' && (
                         <div className="mt-2 d-flex gap-2">
                           <a 
-                            href="tel:7992132123" 
+                            href={`tel:${config.services.phone.support}`} 
                             className="btn btn-outline-primary btn-sm"
                           >
                             📞 Call Us
                           </a>
                           <a 
-                            href={`https://wa.me/917992132123?text=Hi, I want to know my order status with order ID: ${order.orderId}?`}
+                            href={buildWhatsAppUrl(`Hi, I want to know my order status with order ID: ${order.orderId}?`)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="btn btn-outline-success btn-sm"

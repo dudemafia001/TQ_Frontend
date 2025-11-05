@@ -4,6 +4,7 @@ import { useCart } from '../contexts/CartContext';
 import { useLocation } from '../contexts/LocationContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import config, { buildApiUrl } from '../../config';
 import './checkout.css';
 import ZomatoLocationModal from '../components/ZomatoLocationModal';
 import '../components/ZomatoLocationModal.css';
@@ -75,7 +76,7 @@ export default function CheckoutPage() {
   useEffect(() => {
     const fetchCoupons = async () => {
       try {
-        const response = await fetch('http://localhost:5001/api/coupons/active');
+        const response = await fetch(buildApiUrl(config.api.endpoints.coupons.active));
         if (response.ok) {
           const couponsData = await response.json();
           setCoupons(couponsData);
@@ -91,7 +92,7 @@ export default function CheckoutPage() {
   // Apply coupon function
   const applyCoupon = async (code: string) => {
     try {
-      const response = await fetch('http://localhost:5001/api/coupons/validate', {
+      const response = await fetch(buildApiUrl(config.api.endpoints.coupons.validate), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -221,7 +222,7 @@ export default function CheckoutPage() {
       setIsProcessingPayment(true);
 
       // Create order on backend
-      const orderResponse = await fetch('http://localhost:5001/api/payments/create-order', {
+      const orderResponse = await fetch(buildApiUrl(config.api.endpoints.payments.createOrder), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -250,7 +251,7 @@ export default function CheckoutPage() {
         handler: async (response: { razorpay_payment_id: string; razorpay_order_id: string; razorpay_signature: string }) => {
           try {
             // Verify payment on backend
-            const verifyResponse = await fetch('http://localhost:5001/api/payments/verify', {
+            const verifyResponse = await fetch(buildApiUrl(config.api.endpoints.payments.verify), {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -315,7 +316,7 @@ export default function CheckoutPage() {
     try {
       setIsProcessingPayment(true);
 
-      const response = await fetch('http://localhost:5001/api/payments/cash', {
+      const response = await fetch(buildApiUrl(config.api.endpoints.payments.cash), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
