@@ -32,7 +32,7 @@ export default function AdminLogin() {
       } else {
         setError(result.message || 'Login failed');
       }
-    } catch (error) {
+    } catch {
       setError('An unexpected error occurred');
     } finally {
       setIsLoading(false);

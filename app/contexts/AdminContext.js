@@ -1,6 +1,6 @@
 "use client";
 import { createContext, useContext, useState, useEffect } from 'react';
-import config, { buildApiUrl } from '../../config';
+import { buildApiUrl } from '../../config';
 
 const AdminContext = createContext();
 
@@ -29,7 +29,7 @@ export const AdminProvider = ({ children }) => {
         try {
           const adminData = JSON.parse(storedAdmin);
           setAdmin(adminData);
-        } catch (error) {
+        } catch {
           localStorage.removeItem('adminData');
         }
       }

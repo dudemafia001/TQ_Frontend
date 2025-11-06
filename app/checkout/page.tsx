@@ -52,7 +52,7 @@ const buildApiUrl = (endpoint: string) => {
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { cartItems, updateQuantity, removeFromCart, isLoading } = useContext(CartContext) || {};
+  const { cartItems, updateQuantity, isLoading } = useContext(CartContext) || {};
   const { user } = useContext(AuthContext) || {};
   const { userLocation, setUserLocation } = useContext(LocationContext) || {};
 
@@ -113,7 +113,7 @@ export default function CheckoutPage() {
     }
   }, [userLocation]);
 
-  const [addressDetails, setAddressDetails] = useState<AddressDetails>({
+  const [addressDetails] = useState<AddressDetails>({
     houseNumber: '',
     street: '',
     landmark: ''
@@ -376,7 +376,7 @@ export default function CheckoutPage() {
         }
       };
 
-      // @ts-ignore
+      // @ts-expect-error Razorpay is loaded dynamically via script tag
       const rzp = new window.Razorpay(options);
       rzp.open();
       

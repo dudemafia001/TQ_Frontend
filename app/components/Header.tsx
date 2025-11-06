@@ -1,5 +1,6 @@
 "use client";
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
@@ -64,7 +65,7 @@ export default function Header() {
         {/* Logo/Brand - Hidden on mobile */}
         <div className="header-brand">
           <Link href="/" className="brand-link">
-            <img src="/logo.png" alt="The Quisine Logo" className="brand-logo" />
+            <Image src="/logo.png" alt="The Quisine Logo" className="brand-logo" width={40} height={40} />
           </Link>
         </div>
 

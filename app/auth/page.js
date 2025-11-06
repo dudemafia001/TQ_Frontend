@@ -59,7 +59,7 @@ export default function AuthPage() {
       } else {
         setMessage(data.message || "Failed to send OTP");
       }
-    } catch (err) {
+    } catch {
       setMessage("Server error");
     }
   };
@@ -113,7 +113,7 @@ export default function AuthPage() {
       } else {
         setMessage(data.message || "Authentication failed");
       }
-    } catch (err) {
+    } catch {
       setMessage("Server error");
     }
   };

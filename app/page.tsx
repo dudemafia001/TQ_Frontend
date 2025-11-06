@@ -1,10 +1,9 @@
 "use client";
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./menu.css";
 import Image from "next/image";
-import { useAuth } from "./contexts/AuthContext";
 import { useCart } from "./contexts/CartContext";
 import config, { buildApiUrl } from "../config";
 import { useLocation } from "./contexts/LocationContext";
@@ -18,87 +17,9 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedVariants, setSelectedVariants] = useState<{[key: string]: string}>({});
   const [showLocationPrompt, setShowLocationPrompt] = useState(false);
-  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
-  const [locationError, setLocationError] = useState("");
 
-  const DELIVERY_CENTER = { lat: 26.4201563, lng: 80.3600507 };
-  const DELIVERY_RADIUS_KM = 7;
-  
   const { addToCart: addToCartContext, updateQuantity, removeFromCart, cartItems, totalItems: cartTotalItems, subtotal } = useCart();
   const { userLocation, deliveryAvailable, setUserLocation, setDeliveryAvailable, clearLocation } = useLocation();
-
-  // Simple distance calculation using Haversine formula
-  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-    const R = 6371; // Radius of the Earth in kilometers
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-      Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c; // Distance in kilometers
-  };
-
-  // Get current location using GPS
-  const getCurrentLocation = () => {
-    console.log('getCurrentLocation called');
-    
-    if (!navigator.geolocation) {
-      setLocationError("Geolocation is not supported by this browser.");
-      console.log('Geolocation not supported');
-      return;
-    }
-
-    setIsLoadingLocation(true);
-    setLocationError("");
-    console.log('Starting geolocation request...');
-    
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        const distance = calculateDistance(
-          latitude, longitude, 
-          DELIVERY_CENTER.lat, DELIVERY_CENTER.lng
-        );
-        
-        const location = {
-          lat: latitude,
-          lng: longitude,
-          address: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
-          distance: parseFloat(distance.toFixed(2))
-        };
-        
-        const isWithinRadius = distance <= DELIVERY_RADIUS_KM;
-        
-        setUserLocation(location);
-        setDeliveryAvailable(isWithinRadius);
-        setShowLocationPrompt(false);
-        setIsLoadingLocation(false);
-      },
-      (error) => {
-        console.log('Geolocation error:', error);
-        let errorMessage = "Unable to get your location. ";
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage += "Please enable location permissions in your browser settings and try again.";
-            break;
-          case error.POSITION_UNAVAILABLE:
-            errorMessage += "Location information unavailable. Please check your GPS settings.";
-            break;
-          case error.TIMEOUT:
-            errorMessage += "Location request timed out. Please try again.";
-            break;
-          default:
-            errorMessage += "Please try again or check your browser settings.";
-        }
-        setLocationError(errorMessage);
-        setIsLoadingLocation(false);
-        console.log('Error message set:', errorMessage);
-      },
-      { timeout: 15000, enableHighAccuracy: true }
-    );
-  };
 
   useEffect(() => {
     // ✅ Load Bootstrap only on client
@@ -107,7 +28,6 @@ export default function Home() {
         console.log("✅ Bootstrap JS loaded");
         const modalEl = document.getElementById("cartModal");
         if (modalEl) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           new (bootstrap as any).Modal(modalEl);
           console.log("✅ Bootstrap modal initialized");
         }
@@ -189,8 +109,6 @@ export default function Home() {
   // Handle change location
   const handleChangeLocation = () => {
     clearLocation();
-    setLocationError("");
-    setIsLoadingLocation(false);
     setShowLocationPrompt(true);
   };
 
@@ -488,7 +406,6 @@ export default function Home() {
                   onClick={() => {
                     // Close the modal first
                     const modal = document.getElementById('cartModal');
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const modalInstance = (window as any).bootstrap?.Modal?.getInstance(modal);
                     if (modalInstance) {
                       modalInstance.hide();
