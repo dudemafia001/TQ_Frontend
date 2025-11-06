@@ -53,8 +53,27 @@ const buildApiUrl = (endpoint: string) => {
 export default function CheckoutPage() {
   const router = useRouter();
   const { cartItems, updateQuantity, isLoading } = useContext(CartContext) || {};
-  const { user } = useContext(AuthContext) || {};
+  const { user, isAuthenticated } = useContext(AuthContext) || {};
   const { userLocation, setUserLocation } = useContext(LocationContext) || {};
+
+  // Authentication check - redirect to auth page if not signed in
+  useEffect(() => {
+    if (!isAuthenticated && !user) {
+      router.push('/auth?redirect=checkout');
+      return;
+    }
+  }, [isAuthenticated, user, router]);
+
+  // Don't render checkout if user is not authenticated
+  if (!isAuthenticated && !user) {
+    return (
+      <div className="checkout-container">
+        <div className="checkout-loading">
+          <p>Redirecting to sign in...</p>
+        </div>
+      </div>
+    );
+  }
 
   // State management
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
