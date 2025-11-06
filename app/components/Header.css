@@ -310,6 +310,20 @@
   color: #2d3748;
 }
 
+.brand-logo {
+  object-fit: contain;
+  border-radius: 8px;
+  min-width: 200px;
+  /* min-height: 87px; */
+  transition: transform .2s;
+  width: 80px !important;
+  height: 80px !important;
+}
+
+.brand-logo:hover {
+  transform: scale(1.05);
+}
+
 .logo-container {
   display: flex;
   align-items: center;
