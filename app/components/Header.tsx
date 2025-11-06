@@ -65,7 +65,7 @@ export default function Header() {
         {/* Logo/Brand - Hidden on mobile */}
         <div className="header-brand">
           <Link href="/" className="brand-link">
-            <Image src="/logo.png" alt="The Quisine Logo" className="brand-logo" width={40} height={40} />
+            <Image src="/logo.png" alt="The Quisine Logo" className="brand-logo" width={80} height={80} />
           </Link>
         </div>
 

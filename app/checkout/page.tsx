@@ -56,6 +56,25 @@ export default function CheckoutPage() {
   const { user, isAuthenticated } = useContext(AuthContext) || {};
   const { userLocation, setUserLocation } = useContext(LocationContext) || {};
 
+  // Authentication check - redirect to auth page if not signed in
+  useEffect(() => {
+    if (!isAuthenticated && !user) {
+      router.push('/auth?redirect=checkout');
+      return;
+    }
+  }, [isAuthenticated, user, router]);
+
+  // Don't render checkout if user is not authenticated
+  if (!isAuthenticated && !user) {
+    return (
+      <div className="checkout-container">
+        <div className="checkout-loading">
+          <p>Redirecting to sign in...</p>
+        </div>
+      </div>
+    );
+  }
+
   // ALL STATE HOOKS - Must be called before any conditional returns
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     fullName: '',

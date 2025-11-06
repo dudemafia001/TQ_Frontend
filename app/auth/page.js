@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "../contexts/AuthContext";
 import config, { buildApiUrl } from "../../config";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -18,12 +18,20 @@ export default function AuthPage() {
   const [message, setMessage] = useState("");
   const { login, isAuthenticated } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.push("/");
+      const redirect = searchParams.get('redirect');
+      if (redirect === 'checkout') {
+        router.push("/checkout");
+      } else if (redirect === 'menu') {
+        router.push("/");
+      } else {
+        router.push("/");
+      }
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, searchParams]);
 
   // OTP Timer countdown
   useEffect(() => {
@@ -108,7 +116,14 @@ export default function AuthPage() {
         setMessage(data.message);
 
         setTimeout(() => {
-          router.push("/");
+          const redirect = searchParams.get('redirect');
+          if (redirect === 'checkout') {
+            router.push("/checkout");
+          } else if (redirect === 'menu') {
+            router.push("/");
+          } else {
+            router.push("/");
+          }
         }, 800);
       } else {
         setMessage(data.message || "Authentication failed");
