@@ -53,15 +53,61 @@ const buildApiUrl = (endpoint: string) => {
 export default function CheckoutPage() {
   const router = useRouter();
   const { cartItems, updateQuantity, isLoading } = useContext(CartContext) || {};
-  const { user } = useContext(AuthContext) || {};
+  const { user, isAuthenticated } = useContext(AuthContext) || {};
   const { userLocation, setUserLocation } = useContext(LocationContext) || {};
 
-  // State management
+  // ALL STATE HOOKS - Must be called before any conditional returns
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     fullName: '',
     phone: '',
     email: ''
   });
+
+  const [addressDetails] = useState<AddressDetails>({
+    houseNumber: '',
+    street: '',
+    landmark: ''
+  });
+
+  const [deliveryAddress, setDeliveryAddress] = useState<DeliveryAddress>({
+    type: 'Home',
+    address: ''
+  });
+
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<string>('');
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [isUserDetailsExpanded, setIsUserDetailsExpanded] = useState(true);
+  
+  // Delivery time state
+  const [deliveryInfo, setDeliveryInfo] = useState<{
+    duration: string;
+    durationMinutes: number | null;
+    distance: string | null;
+    available: boolean;
+  }>({
+    duration: 'Calculating...',
+    durationMinutes: null,
+    distance: null,
+    available: true
+  });
+  
+  // Coupon states
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [showAllCoupons, setShowAllCoupons] = useState(false);
+
+  // ALL EFFECT HOOKS - Must be called before any conditional returns  
+  // Authentication check - redirect to auth page if not signed in
+  useEffect(() => {
+    if (!isAuthenticated && !user) {
+      router.push('/auth?redirect=checkout');
+      return;
+    }
+  }, [isAuthenticated, user, router]);
 
   // Fetch real user data
   useEffect(() => {
@@ -112,43 +158,6 @@ export default function CheckoutPage() {
       });
     }
   }, [userLocation]);
-
-  const [addressDetails] = useState<AddressDetails>({
-    houseNumber: '',
-    street: '',
-    landmark: ''
-  });
-
-  const [deliveryAddress, setDeliveryAddress] = useState<DeliveryAddress>({
-    type: 'Home',
-    address: ''
-  });
-
-  const [showLocationModal, setShowLocationModal] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<string>('');
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-  const [isUserDetailsExpanded, setIsUserDetailsExpanded] = useState(true);
-  
-  // Delivery time state
-  const [deliveryInfo, setDeliveryInfo] = useState<{
-    duration: string;
-    durationMinutes: number | null;
-    distance: string | null;
-    available: boolean;
-  }>({
-    duration: 'Calculating...',
-    durationMinutes: null,
-    distance: null,
-    available: true
-  });
-  
-  // Coupon states
-  const [couponCode, setCouponCode] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
-  const [couponDiscount, setCouponDiscount] = useState(0);
-  const [coupons, setCoupons] = useState<Coupon[]>([]);
-  const [showAllCoupons, setShowAllCoupons] = useState(false);
 
   // Constants
   const minimumCashAmount = 499;
@@ -248,6 +257,17 @@ export default function CheckoutPage() {
       window.removeEventListener('resize', handleResize);
     };
   }, []);
+
+  // Don't render checkout if user is not authenticated
+  if (!isAuthenticated && !user) {
+    return (
+      <div className="checkout-container">
+        <div className="checkout-loading">
+          <p>Redirecting to sign in...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Functions
   const applyCoupon = (code: string) => {
