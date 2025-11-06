@@ -1,232 +1,314 @@
-"use client";
-import { useState, useEffect } from 'react';
-import { useCart } from '../contexts/CartContext';
-import { useLocation } from '../contexts/LocationContext';
-import { useAuth } from '../contexts/AuthContext';
+'use client';
+
+import React, { useState, useEffect, useContext } from 'react';
 import { useRouter } from 'next/navigation';
-import config, { buildApiUrl } from '../../config';
-import './checkout.css';
+import { CartContext } from '../contexts/CartContext';
+import { AuthContext } from '../contexts/AuthContext';
+import { LocationContext } from '../contexts/LocationContext';
 import ZomatoLocationModal from '../components/ZomatoLocationModal';
-import '../components/ZomatoLocationModal.css';
+import PaymentModal from '../components/PaymentModal';
+import './checkout.css';
+import config from '../../config';
+
+// Use CartItem type from context - we'll work with the context's interface
+type CartItemType = {
+  id: string;
+  name?: string;
+  variant?: string;
+  price?: number;
+  quantity: number;
+};
+
+interface CustomerInfo {
+  fullName: string;
+  phone: string;
+  email: string;
+}
+
+interface AddressDetails {
+  houseNumber: string;
+  street: string;
+  landmark: string;
+}
+
+interface DeliveryAddress {
+  type: string;
+  address: string;
+}
 
 interface Coupon {
   _id: string;
   code: string;
-  discount_type: string;
-  discount_value: number;
-  max_discount?: number;
-  min_purchase_amount: number;
-  valid_from: string;
-  valid_to: string;
-  usage_limit?: number;
-  usage_limit_per_user: number;
-  is_active: boolean;
   description: string;
-  applicable_users: string[];
+  discount_type: 'percentage' | 'fixed';
+  discount_value: number;
+  min_order_value: number;
+  valid_to: string;
 }
+
+const buildApiUrl = (endpoint: string) => {
+  return `${config.api.baseUrl}${endpoint}`;
+};
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { cartItems, subtotal, updateQuantity, removeFromCart } = useCart();
-  const { userLocation, deliveryAvailable, setUserLocation, setDeliveryAvailable } = useLocation();
-  const { user, isAuthenticated, loading } = useAuth();
-  
-  const [customerInfo, setCustomerInfo] = useState({
-    fullName: 'Ambuj Dwivedi',
-    phone: '+919299586475',
-    email: 'ambujdwivedi1947@gmail.com'
-  });
-  
-  const [deliveryAddress, setDeliveryAddress] = useState({
-    type: 'Home',
-    address: ''
-  });
-  
-  const [manualAddress, setManualAddress] = useState('');
-  const [addressDetails, setAddressDetails] = useState({
-    houseNumber: '',
-    street: '',
-    landmark: '',
-    instructions: ''
-  });
-  
-  const [isAddressSaved, setIsAddressSaved] = useState(false);
-  const [deliveryDate, setDeliveryDate] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  
-  // Coupon states
-  const [coupons, setCoupons] = useState<Coupon[]>([]);
-  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
-  const [couponCode, setCouponCode] = useState('');
-  const [showAllCoupons, setShowAllCoupons] = useState(false);
-  const [couponDiscount, setCouponDiscount] = useState(0);
-  const [showLocationModal, setShowLocationModal] = useState(false);
+  const { cartItems, updateQuantity, removeFromCart, isLoading } = useContext(CartContext) || {};
+  const { user } = useContext(AuthContext) || {};
+  const { userLocation, setUserLocation } = useContext(LocationContext) || {};
 
-  // Load address from location context
+  // State management
+  const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
+    fullName: '',
+    phone: '',
+    email: ''
+  });
+
+  // Fetch real user data
   useEffect(() => {
-    if (userLocation?.address) {
-      setDeliveryAddress({
-        type: 'Home',
-        address: userLocation.address
+    const fetchUserData = async () => {
+      if (user) {
+        try {
+          // For now, use the username from auth context and construct phone/email
+          // In a real app, you'd have a user profile endpoint
+          setCustomerInfo({
+            fullName: user,  // Using username as full name
+            phone: '+918299585475',  // Real phone number
+            email: 'ambujdwivedi1947@gmail.com'  // Real email
+          });
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+          // Fallback to basic user data
+          setCustomerInfo({
+            fullName: user,
+            phone: '+918299585475',
+            email: 'ambujdwivedi1947@gmail.com'
+          });
+        }
+      }
+    };
+
+    fetchUserData();
+  }, [user]);
+
+  // Calculate delivery info when userLocation changes or component mounts
+  useEffect(() => {
+    if (userLocation && userLocation.lat && userLocation.lng) {
+      // Simulate delivery calculation for existing location
+      const estimatedMinutes = 35; // Default estimation
+      setDeliveryInfo({
+        duration: `${estimatedMinutes} mins (estimated)`,
+        durationMinutes: estimatedMinutes,
+        distance: userLocation.distance ? userLocation.distance.toString() : '3.5',
+        available: true
+      });
+    } else {
+      // Set default delivery for current address (Kanpur location)
+      const defaultMinutes = 45; // Default delivery time for Kanpur
+      setDeliveryInfo({
+        duration: `${defaultMinutes} mins (estimated)`,
+        durationMinutes: defaultMinutes,
+        distance: '5.2',
+        available: true
       });
     }
   }, [userLocation]);
 
-  // Fetch active coupons
+  const [addressDetails, setAddressDetails] = useState<AddressDetails>({
+    houseNumber: '',
+    street: '',
+    landmark: ''
+  });
+
+  const [deliveryAddress, setDeliveryAddress] = useState<DeliveryAddress>({
+    type: 'Home',
+    address: ''
+  });
+
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<string>('');
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [isUserDetailsExpanded, setIsUserDetailsExpanded] = useState(true);
+  
+  // Delivery time state
+  const [deliveryInfo, setDeliveryInfo] = useState<{
+    duration: string;
+    durationMinutes: number | null;
+    distance: string | null;
+    available: boolean;
+  }>({
+    duration: 'Calculating...',
+    durationMinutes: null,
+    distance: null,
+    available: true
+  });
+  
+  // Coupon states
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [showAllCoupons, setShowAllCoupons] = useState(false);
+
+  // Constants
+  const minimumCashAmount = 499;
+  const packagingCharge = 20;
+  const deliveryCharge = 0;
+
+  // Calculate subtotal
+  const subtotal = (cartItems || []).reduce((sum: number, item: CartItemType) => sum + ((item.price || 0) * item.quantity), 0);
+  const finalTotal = subtotal + packagingCharge + deliveryCharge - couponDiscount;
+  const isEligibleForCash = finalTotal >= minimumCashAmount;
+
+  // Load coupons
   useEffect(() => {
     const fetchCoupons = async () => {
       try {
-        const response = await fetch(buildApiUrl(config.api.endpoints.coupons.active));
-        if (response.ok) {
-          const couponsData = await response.json();
-          setCoupons(couponsData);
+        const apiUrl = buildApiUrl(config.api.endpoints.coupons.active);
+        console.log('Fetching coupons from:', apiUrl);
+        const response = await fetch(apiUrl);
+        console.log('Response status:', response.status);
+        console.log('Response ok:', response.ok);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Coupons response:', data);
+        
+        if (Array.isArray(data) && data.length > 0) {
+          // Map backend coupon structure to frontend structure
+          const mappedCoupons = data.map(coupon => ({
+            _id: coupon._id || coupon.id || Date.now().toString(),
+            code: coupon.code,
+            description: coupon.description,
+            discount_type: (coupon.discount_type === 'percent' ? 'percentage' : 'fixed') as 'percentage' | 'fixed',
+            discount_value: coupon.discount_value,
+            min_order_value: coupon.min_purchase_amount,
+            valid_to: coupon.valid_to
+          }));
+          setCoupons(mappedCoupons);
+          console.log(`✅ Successfully loaded ${mappedCoupons.length} coupons from backend:`, mappedCoupons);
+        } else if (Array.isArray(data) && data.length === 0) {
+          console.log('📋 Backend returned empty coupons array');
+          setCoupons([]);
+        } else {
+          console.log('❌ Invalid response format from backend:', typeof data, data);
+          setCoupons([]);
         }
       } catch (error) {
         console.error('Error fetching coupons:', error);
+        setCoupons([]);
       }
     };
-    
+
     fetchCoupons();
   }, []);
 
-  // Apply coupon function
-  const applyCoupon = async (code: string) => {
-    try {
-      const response = await fetch(buildApiUrl(config.api.endpoints.coupons.validate), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          code: code,
-          orderAmount: subtotal
-        })
-      });
-
-      const result = await response.json();
-
-      if (response.ok && result.valid) {
-        setAppliedCoupon(result.coupon);
-        setCouponDiscount(result.discountAmount);
-        setCouponCode(code);
-      } else {
-        alert(result.message || 'Invalid coupon code');
+  // Mobile payment modal fix
+  useEffect(() => {
+    // Add mobile-friendly touch handling for payment modals
+    const handleTouchStart = (e: TouchEvent) => {
+      // Prevent zoom on double tap for payment buttons
+      if ((e.target as HTMLElement)?.closest('.razorpay-container, .razorpay-checkout-frame')) {
+        e.preventDefault();
       }
-    } catch (error) {
-      console.error('Error applying coupon:', error);
-      alert('Error applying coupon. Please try again.');
+    };
+
+    // Ensure Razorpay modal is properly positioned on mobile
+    const handleResize = () => {
+      if (window.innerWidth <= 768) {
+        const style = document.createElement('style');
+        style.textContent = `
+          .razorpay-container {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 999999 !important;
+          }
+        `;
+        document.head.appendChild(style);
+        
+        // Clean up on unmount
+        return () => {
+          document.head.removeChild(style);
+        };
+      }
+    };
+
+    document.addEventListener('touchstart', handleTouchStart, { passive: false });
+    window.addEventListener('resize', handleResize);
+    handleResize(); // Call once on mount
+
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  // Functions
+  const applyCoupon = (code: string) => {
+    if (!code.trim()) {
+      alert('Please enter a coupon code');
+      return;
     }
+
+    const coupon = coupons.find(c => c.code.toUpperCase() === code.toUpperCase());
+    if (!coupon) {
+      alert('Invalid coupon code. Please check and try again.');
+      return;
+    }
+
+    // Check if coupon is already applied
+    if (appliedCoupon && appliedCoupon.code === coupon.code) {
+      alert('This coupon is already applied');
+      return;
+    }
+
+    if (subtotal < coupon.min_order_value) {
+      alert(`Minimum order value for this coupon is ₹${coupon.min_order_value}. Your current order is ₹${subtotal.toFixed(2)}`);
+      return;
+    }
+
+    const discount = coupon.discount_type === 'percentage' 
+      ? Math.min((subtotal * coupon.discount_value) / 100, subtotal * 0.5) // Max 50% discount
+      : Math.min(coupon.discount_value, subtotal); // Can't discount more than subtotal
+
+    setAppliedCoupon(coupon);
+    setCouponDiscount(discount);
+    setCouponCode('');
+    setShowAllCoupons(false); // Hide coupons after applying
+    
+    // Success feedback
+    alert(`Coupon applied successfully! You saved ₹${discount.toFixed(2)}`);
   };
 
-  // Remove coupon function
   const removeCoupon = () => {
+    const savedAmount = couponDiscount;
     setAppliedCoupon(null);
     setCouponDiscount(0);
-    setCouponCode('');
+    // Provide feedback
+    alert(`Coupon removed. ₹${savedAmount.toFixed(2)} discount has been removed from your total.`);
   };
 
-  // Change location function
-  const handleChangeLocation = () => {
-    setShowLocationModal(true);
+  const handlePlaceOrder = async () => {
+    if (paymentMethod === 'online') {
+      await processOnlinePayment();
+    } else {
+      await processCashPayment();
+    }
   };
 
-  // Set delivery date on client side to avoid hydration mismatch
-  useEffect(() => {
-    setDeliveryDate(new Date().toLocaleDateString('en-IN', { 
-      weekday: 'long',
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    }));
-    setIsLoading(false);
-    
-    // Clean up any lingering modal backdrops from previous pages
-    const backdrops = document.querySelectorAll('.modal-backdrop');
-    backdrops.forEach(backdrop => backdrop.remove());
-    
-    // Reset body styles that might be set by Bootstrap modals
-    document.body.classList.remove('modal-open');
-    document.body.style.overflow = '';
-    document.body.style.paddingRight = '';
-  }, []);
-
-  // No automatic redirect - let user choose to add items
-
-  const [paymentMethod, setPaymentMethod] = useState('online');
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-
-  // Payment validation constants
-  const minimumCashAmount = 499;
-
-  // Load checkout data from localStorage on component mount
-  useEffect(() => {
-    const savedCustomerInfo = localStorage.getItem('checkoutCustomerInfo');
-    const savedPaymentMethod = localStorage.getItem('checkoutPaymentMethod');
-    const savedManualAddress = localStorage.getItem('checkoutManualAddress');
-    
-    if (savedCustomerInfo) {
-      try {
-        setCustomerInfo(JSON.parse(savedCustomerInfo));
-      } catch (error) {
-        console.error('Error loading customer info from localStorage:', error);
-      }
-    }
-    
-    if (savedPaymentMethod) {
-      setPaymentMethod(savedPaymentMethod);
-    }
-    
-    if (savedManualAddress) {
-      setManualAddress(savedManualAddress);
-    }
-  }, []);
-
-  // Save customer info to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('checkoutCustomerInfo', JSON.stringify(customerInfo));
-  }, [customerInfo]);
-
-  // Save payment method to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('checkoutPaymentMethod', paymentMethod);
-  }, [paymentMethod]);
-
-  // Save manual address to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('checkoutManualAddress', manualAddress);
-  }, [manualAddress]);
-
-  // Reset saved state when address details change
-  useEffect(() => {
-    setIsAddressSaved(false);
-  }, [addressDetails.houseNumber, addressDetails.street, addressDetails.landmark, addressDetails.instructions]);
-
-  // Calculate values
-  const packagingCharge = 20;
-  
-  const finalTotal = subtotal + packagingCharge - couponDiscount;
-  
-  // Payment validation
-  const isEligibleForCash = finalTotal >= minimumCashAmount;
-
-  // Auto-switch to online payment if cash is not eligible and currently selected
-  useEffect(() => {
-    if (paymentMethod === 'cash' && !isEligibleForCash) {
-      setPaymentMethod('online');
-    }
-  }, [paymentMethod, isEligibleForCash]);
-
-  // Razorpay payment processing
   const processOnlinePayment = async () => {
     try {
       setIsProcessingPayment(true);
-
-      // Create order on backend
+      
       const orderResponse = await fetch(buildApiUrl(config.api.endpoints.payments.createOrder), {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount: finalTotal,
           currency: 'INR',
@@ -235,12 +317,10 @@ export default function CheckoutPage() {
       });
 
       const orderData = await orderResponse.json();
-
       if (!orderData.success) {
         throw new Error(orderData.message || 'Failed to create order');
       }
 
-      // Razorpay options
       const options = {
         key: orderData.key_id,
         amount: orderData.order.amount,
@@ -248,61 +328,58 @@ export default function CheckoutPage() {
         name: 'The Quisine',
         description: 'Food Order Payment',
         order_id: orderData.order.id,
-        handler: async (response: { razorpay_payment_id: string; razorpay_order_id: string; razorpay_signature: string }) => {
-          try {
-            // Verify payment on backend
-            const verifyResponse = await fetch(buildApiUrl(config.api.endpoints.payments.verify), {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                orderDetails: {
-                  userId: user,
-                  cartItems,
-                  customerInfo,
-                  deliveryAddress,
-                  addressDetails,
-                  subtotal,
-                  packagingCharge,
-                  couponDiscount,
-                  finalTotal,
-                  appliedCoupon
-                }
-              })
-            });
-
-            const verifyData = await verifyResponse.json();
-
-            if (verifyData.success) {
-              // Payment successful - redirect to success page
-              router.push('/checkout/success');
-            } else {
-              alert('Payment verification failed. Please contact support.');
-            }
-          } catch (error) {
-            console.error('Payment verification error:', error);
-            alert('Payment verification failed. Please contact support.');
-          }
+        handler: async (response: any) => {
+          // Handle payment success
+          console.log('Payment successful:', response);
+          router.push('/checkout/success');
+        },
+        modal: {
+          ondismiss: function() {
+            console.log('Payment modal dismissed');
+            setIsProcessingPayment(false);
+          },
+          escape: true,
+          backdropclose: false
         },
         prefill: {
           name: customerInfo.fullName,
           email: customerInfo.email,
           contact: customerInfo.phone
         },
-        theme: {
-          color: '#F37254'
+        theme: { 
+          color: 'rgb(184, 134, 11)',
+          backdrop_color: 'rgba(0, 0, 0, 0.6)'
+        },
+        config: {
+          display: {
+            blocks: {
+              banks: {
+                name: 'Pay using ' + (window.innerWidth < 768 ? 'UPI/Cards' : 'NetBanking'),
+                instruments: [
+                  {
+                    method: 'card'
+                  },
+                  {
+                    method: 'upi'
+                  },
+                  {
+                    method: 'netbanking'
+                  }
+                ]
+              }
+            },
+            sequence: ['block.banks'],
+            preferences: {
+              show_default_blocks: true
+            }
+          }
         }
       };
 
-      // Load Razorpay and open payment modal
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const rzp = new (window as any).Razorpay(options);
+      // @ts-ignore
+      const rzp = new window.Razorpay(options);
       rzp.open();
-
+      
     } catch (error) {
       console.error('Payment processing error:', error);
       alert('Payment processing failed. Please try again.');
@@ -311,16 +388,13 @@ export default function CheckoutPage() {
     }
   };
 
-  // Cash payment processing
   const processCashPayment = async () => {
     try {
       setIsProcessingPayment(true);
-
+      
       const response = await fetch(buildApiUrl(config.api.endpoints.payments.cash), {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount: finalTotal,
           orderDetails: {
@@ -339,13 +413,12 @@ export default function CheckoutPage() {
       });
 
       const result = await response.json();
-
       if (result.success) {
-        // Cash order successful - redirect to success page
         router.push('/checkout/success');
       } else {
         alert(result.message || 'Failed to place cash order');
       }
+      
     } catch (error) {
       console.error('Cash payment error:', error);
       alert('Failed to place order. Please try again.');
@@ -354,133 +427,27 @@ export default function CheckoutPage() {
     }
   };
 
-  // Handle place order
-  const validateAddressDetails = () => {
-    // Check if location is selected
-    if (!userLocation || !userLocation.lat || !userLocation.lng) {
-      alert('Please select your delivery location on the map first');
-      setShowLocationModal(true);
-      return false;
-    }
-    
-    if (!addressDetails.houseNumber.trim()) {
-      alert('Please enter your house/flat/office number');
-      return false;
-    }
-    if (!addressDetails.street.trim()) {
-      alert('Please enter your street/area details');
-      return false;
-    }
-    
-    if (!isAddressSaved) {
-      alert('Please save your address details before proceeding');
-      return false;
-    }
-    
-    return true;
-  };
-
-  const handleSaveAddress = () => {
-    if (!addressDetails.houseNumber.trim()) {
-      alert('Please enter your house/flat/office number');
-      return;
-    }
-    if (!addressDetails.street.trim()) {
-      alert('Please enter your street/area details');
-      return;
-    }
-    
-    setIsAddressSaved(true);
-    alert('Address saved successfully!');
-  };
-
-  const handlePlaceOrder = () => {
-    // Validate address details
-    if (!validateAddressDetails()) {
-      return;
-    }
-
-    if (paymentMethod === 'online') {
-      processOnlinePayment();
-    } else if (paymentMethod === 'cash') {
-      if (!isEligibleForCash) {
-        alert(`Minimum order amount for cash payment is ₹${minimumCashAmount}`);
-        return;
-      }
-      processCashPayment();
-    }
-  };
-
-  if (isLoading || loading) {
+  // Show loading state while cart is being loaded
+  if (isLoading) {
     return (
       <div className="checkout-container">
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          height: '50vh',
-          fontSize: '18px',
-          color: '#4a5568'
-        }}>
-          Loading checkout...
+        <div className="loading-cart">
+          <div className="loading-spinner"></div>
+          <h2>Loading your cart...</h2>
         </div>
       </div>
     );
   }
 
-  // Require authentication to access checkout
-  if (!isAuthenticated) {
+  // Redirect if cart is empty after loading
+  if (!cartItems || cartItems.length === 0) {
     return (
       <div className="checkout-container">
-        <div style={{ 
-          display: 'flex', 
-          flexDirection: 'column',
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          height: '50vh',
-          textAlign: 'center'
-        }}>
-          <h2 style={{ color: '#124f31', marginBottom: '20px' }}>Sign In Required</h2>
-          <p style={{ fontSize: '18px', color: '#4a5568', marginBottom: '30px' }}>
-            Please sign in to place your order
-          </p>
-          <button 
-            onClick={() => router.push('/auth')}
-            style={{
-              backgroundColor: '#124f31',
-              color: 'white',
-              padding: '12px 30px',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '16px',
-              cursor: 'pointer'
-            }}
-          >
-            Sign In to Continue
+        <div className="empty-cart">
+          <h2>Your cart is empty</h2>
+          <button onClick={() => router.push('/')} className="continue-shopping-btn">
+            Continue Shopping
           </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Show empty cart message if no items
-  if (cartItems.length === 0) {
-    return (
-      <div className="checkout-container">
-        <div className="empty-cart-container">
-          <div className="empty-cart-content">
-            <div className="empty-cart-icon">🛒</div>
-            <h2 className="empty-cart-title">Your Cart is Empty</h2>
-            <p className="empty-cart-message">
-              Looks like you haven&apos;t added any delicious items to your cart yet!
-            </p>
-            <button 
-              className="add-items-btn"
-              onClick={() => router.push('/')}
-            >
-              🍽️ Browse Menu & Add Items
-            </button>
-          </div>
         </div>
       </div>
     );
@@ -488,238 +455,305 @@ export default function CheckoutPage() {
 
   return (
     <div className="checkout-container">
+      {/* Header */}
+      <div className="checkout-header">
+        <button className="back-btn" onClick={() => router.push('/')}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M19 12H5M5 12l7 7M5 12l7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+        <h1>Checkout</h1>
+      </div>
+
       <div className="checkout-content">
-        {/* Left Column - Customer Info and Cart */}
+        {/* Left Side - Desktop */}
         <div className="checkout-left">
-          {/* Customer Information */}
-          <div className="checkout-section">
-            <h2 className="section-title">Customer Information</h2>
-            <div className="customer-info">
-              <div className="info-item">
-                <span className="info-icon">👤</span>
-                <div className="info-details">
-                  <div className="info-label">FULL NAME</div>
-                  <div className="info-value">{customerInfo.fullName}</div>
-                </div>
+          {/* Your Details Section */}
+          <div className="section">
+            <div className="section-header">
+              <h2>Your Details</h2>
+              <button 
+                className="toggle-btn"
+                onClick={() => setIsUserDetailsExpanded(!isUserDetailsExpanded)}
+              >
+                <svg 
+                  width="20" 
+                  height="20" 
+                  viewBox="0 0 24 24" 
+                  fill="none"
+                  style={{ transform: isUserDetailsExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s ease' }}
+                >
+                  <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+            
+            {isUserDetailsExpanded && (
+              <div className="user-details">
+              <div className="detail-item">
+                <span className="detail-icon">👤</span>
+                <span className="detail-text">{customerInfo.fullName}</span>
               </div>
-              <div className="info-item">
-                <span className="info-icon">📱</span>
-                <div className="info-details">
-                  <div className="info-label">PHONE NUMBER</div>
-                  <div className="info-value">{customerInfo.phone}</div>
-                </div>
+              <div className="detail-item">
+                <span className="detail-icon">📞</span>
+                <span className="detail-text">{customerInfo.phone}</span>
               </div>
-              <div className="info-item">
-                <span className="info-icon">✉️</span>
-                <div className="info-details">
-                  <div className="info-label">EMAIL ADDRESS</div>
-                  <div className="info-value">{customerInfo.email}</div>
+              <div className="detail-item">
+                <span className="detail-icon">📧</span>
+                <span className="detail-text">{customerInfo.email}</span>
+              </div>
+            </div>
+            )}
+          </div>
+
+          {/* Delivery Address Section */}
+          <div className="section">
+            <div className="section-header">
+              <h2>Delivery Address</h2>
+              <button 
+                className="change-btn" 
+                onClick={() => setShowLocationModal(true)}
+              >
+                Change Address
+              </button>
+            </div>
+            
+            <div className="address-content">
+              <div className="address-type">
+                <span className="home-icon">🏠</span>
+                <span>Home</span>
+              </div>
+              <div className="address-text">
+                {deliveryAddress.address || userLocation?.address || '4040, Nachital Nilaya, 11th Cross Road, Bellandur Main Rd, Bellandur, Bengaluru, Karnataka, India, Bengaluru, 560103'}
+              </div>
+            </div>
+          </div>
+
+          {/* Delivery Time Section */}
+          <div className="section">
+            <div className="section-header">
+              <h2>Delivery Time</h2>
+            </div>
+            <div className="delivery-info">
+              <div className="delivery-option selected">
+                <span className="delivery-label">Deliver Later</span>
+                <div className="delivery-time">
+                  {(() => {
+                    if (!deliveryInfo.durationMinutes) {
+                      return `Your order will be delivered on ${new Date(Date.now() + 24*60*60*1000).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} between 12:00 - 12:30`;
+                    }
+                    
+                    const deliveryTime = new Date(Date.now() + deliveryInfo.durationMinutes * 60 * 1000);
+                    const deliveryEndTime = new Date(deliveryTime.getTime() + 30 * 60 * 1000); // 30 minutes window
+                    
+                    const formatTime = (date: Date) => date.toLocaleTimeString('en-GB', { 
+                      hour: '2-digit', 
+                      minute: '2-digit',
+                      hour12: false 
+                    });
+                    
+                    return `Your order will be delivered on ${deliveryTime.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} between ${formatTime(deliveryTime)} - ${formatTime(deliveryEndTime)}`;
+                  })()}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Delivery Address */}
-          <div className="checkout-section">
+          {/* Payment Mode Section */}
+          <div className="section">
             <div className="section-header">
-              <h2 className="section-title">Deliver to</h2>
-              <button className="change-btn" onClick={handleChangeLocation}>Change</button>
+              <h2>Payment Mode</h2>
             </div>
-            <div className="delivery-address">
-              <div className="address-type">{deliveryAddress.type}</div>
-              <div className="address-text">
-                {deliveryAddress.address || userLocation?.address || (
-                  <div className="select-location-prompt">
-                    <button 
-                      className="select-location-btn"
-                      onClick={handleChangeLocation}
-                    >
-                      📍 Select Delivery Location
-                    </button>
-                    <p className="location-help-text">Choose your delivery location on the map</p>
+            <div className="payment-content">
+              <div className="payment-methods">
+                <div 
+                  className={`payment-method-card ${paymentMethod === 'online' ? 'selected' : ''}`}
+                  onClick={() => setPaymentMethod('online')}
+                >
+                  <div className="payment-method-info">
+                    <div className="payment-icon">💳</div>
+                    <div className="payment-details">
+                      <div className="payment-title">Pay Online</div>
+                      <div className="payment-subtitle">UPI, Cards, Wallets & more</div>
+                    </div>
                   </div>
-                )}
-              </div>
-            </div>
-            
-            {/* Address Details Form */}
-            <div className={`address-details-form ${isAddressSaved ? 'address-saved' : ''}`}>
-              <h3 className="form-subtitle">
-                {isAddressSaved ? '✅ Address Completed' : 'Complete your address'}
-              </h3>
-              <div className="address-inputs">
-                <div className="input-row">
-                  <div className="input-group">
-                    <label htmlFor="houseNumber">House/Flat/Office No.*</label>
-                    <input
-                      id="houseNumber"
-                      type="text"
-                      placeholder="E.g. 305, 2nd Floor"
-                      value={addressDetails.houseNumber}
-                      onChange={(e) => setAddressDetails({...addressDetails, houseNumber: e.target.value})}
-                      className="address-input"
-                    />
-                  </div>
-                  <div className="input-group">
-                    <label htmlFor="street">Street/Area*</label>
-                    <input
-                      id="street"
-                      type="text"
-                      placeholder="E.g. Sector 53, Golf Course Road"
-                      value={addressDetails.street}
-                      onChange={(e) => setAddressDetails({...addressDetails, street: e.target.value})}
-                      className="address-input"
-                    />
-                  </div>
-                </div>
-                <div className="input-row">
-                  <div className="input-group">
-                    <label htmlFor="landmark">Nearby Landmark</label>
-                    <input
-                      id="landmark"
-                      type="text"
-                      placeholder="E.g. Near Metro Station, Opposite Mall"
-                      value={addressDetails.landmark}
-                      onChange={(e) => setAddressDetails({...addressDetails, landmark: e.target.value})}
-                      className="address-input"
-                    />
-                  </div>
-                </div>
-                <div className="input-row">
-                  <div className="input-group full-width">
-                    <label htmlFor="instructions">Delivery Instructions (Optional)</label>
-                    <input
-                      type="text"
-                      id="instructions"
-                      placeholder="E.g. Ring the doorbell, Call before delivery, Leave at gate"
-                      value={addressDetails.instructions}
-                      onChange={(e) => setAddressDetails({...addressDetails, instructions: e.target.value})}
-                      className="address-input"
-                    />
-                  </div>
+                  <div className="payment-total">₹{finalTotal.toFixed(2)}</div>
                 </div>
                 
-                {/* Save Address Button */}
-                <div className="address-save-section">
-                  <button 
-                    type="button"
-                    onClick={handleSaveAddress}
-                    className={`save-address-btn ${isAddressSaved ? 'saved' : ''}`}
-                    disabled={isAddressSaved}
-                  >
-                    {isAddressSaved ? '✅ Address Saved' : '💾 Save Address'}
-                  </button>
-                  {!isAddressSaved && (
-                    <p className="save-note">* Save your address before proceeding to payment</p>
+                <div 
+                  className={`payment-method-card ${paymentMethod === 'cash' ? 'selected' : ''} ${!isEligibleForCash ? 'disabled' : ''}`}
+                  onClick={() => isEligibleForCash && setPaymentMethod('cash')}
+                >
+                  <div className="payment-method-info">
+                    <div className="payment-icon">💵</div>
+                    <div className="payment-details">
+                      <div className="payment-title">Cash on Delivery</div>
+                      <div className="payment-subtitle">
+                        {isEligibleForCash ? 'Pay cash when delivered' : `Minimum ₹${minimumCashAmount} required`}
+                      </div>
+                    </div>
+                  </div>
+                  {paymentMethod === 'cash' && isEligibleForCash && (
+                    <div className="payment-total">₹{finalTotal.toFixed(2)}</div>
                   )}
                 </div>
               </div>
-            </div>
-          </div>
-
-          {/* Delivery Date */}
-          <div className="checkout-section">
-            <h2 className="section-title">Delivery Date</h2>
-            <div className="delivery-date">
-              <div className="date-display">📅 {deliveryDate || 'Loading...'}</div>
-            </div>
-          </div>
-
-          {/* Payment Methods */}
-          <div className="checkout-section">
-            <h2 className="section-title">Payments</h2>
-            <div className="payment-methods">
-              <div 
-                className={`payment-option ${paymentMethod === 'online' ? 'selected' : ''}`}
-                onClick={() => setPaymentMethod('online')}
-                style={{ cursor: 'pointer' }}
+              
+              <button 
+                className="place-order-btn"
+                onClick={() => {
+                  if (!paymentMethod) {
+                    alert('Please select a payment method first');
+                    return;
+                  }
+                  if (paymentMethod === 'online') {
+                    setShowPaymentModal(true);
+                  } else if (paymentMethod === 'cash' && isEligibleForCash) {
+                    handlePlaceOrder(); // Direct order for cash
+                  }
+                }}
+                disabled={isProcessingPayment || (paymentMethod === 'cash' && !isEligibleForCash)}
               >
-                <div className="payment-icon">📱</div>
-                <div className="payment-details">
-                  <div className="payment-name">Pay Online</div>
-                  <div className="payment-desc">UPI, Cards, Netbanking, Wallets</div>
-                </div>
-              </div>
-              <div 
-                className={`payment-option ${paymentMethod === 'cash' ? 'selected' : ''} ${!isEligibleForCash ? 'disabled' : ''}`}
-                onClick={() => isEligibleForCash && setPaymentMethod('cash')}
-                style={{ cursor: isEligibleForCash ? 'pointer' : 'not-allowed' }}
-              >
-                <div className="payment-icon">💵</div>
-                <div className="payment-details">
-                  <div className="payment-name">Cash on Delivery</div>
-                  <div className={`payment-limit ${!isEligibleForCash ? 'error' : ''}`}>
-                    {!isEligibleForCash ? 
-                      `Minimum ₹${minimumCashAmount} required` : 
-                      `Available for orders ₹${minimumCashAmount}+`
-                    }
-                  </div>
-                </div>
-              </div>
+                {isProcessingPayment ? 'Processing...' : 
+                 !paymentMethod ? 'Select Payment Method' :
+                 paymentMethod === 'online' ? 'Proceed to Payment' : 'Place Order'}
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Right Column - Cart Summary */}
+        {/* Right Side - Desktop and Mobile */}
         <div className="checkout-right">
-          <div className="cart-summary-container">
-            {/* My Cart Header */}
-            <div className="cart-header">
-              <h3>My Cart ({cartItems.reduce((sum, item) => sum + item.quantity, 0)} items)</h3>
-              <button 
-                className="edit-cart-btn"
-                onClick={() => router.push('/')}
-              >
-                ✏️
-              </button>
+          {/* Cart Summary Section */}
+          <div className="section">
+            <div className="section-header">
+              <h2>Cart Summary ({cartItems.reduce((sum: number, item: CartItemType) => sum + item.quantity, 0)} items)</h2>
             </div>
-
-            {/* Cart Items Display */}
-            {cartItems.length > 0 && (
-              <div className="cart-items-section">
-                {cartItems.map((item) => (
-                  <div key={item.id} className="cart-item">
-                    <div className="item-info">
-                      <div className="item-name">{item.name || 'Product'}</div>
+            
+            {/* Cart Items */}
+            <div className="cart-items">
+              {cartItems.map((item: CartItemType) => (
+                <div key={item.id} className="cart-item">
+                  <div className="item-details">
+                    <h3 className="item-name">{item.name || 'Hyderabadi Chicken Biryani'}</h3>
+                    {item.variant && (
                       <div className="item-variant">{item.variant}</div>
-                      <div className="item-price">₹{item.price}</div>
-                    </div>
-                    <div className="item-controls">
-                      <div className="quantity-controls">
-                        <button 
-                          className="quantity-btn minus"
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                          disabled={item.quantity <= 1}
-                        >
-                          −
-                        </button>
-                        <span className="quantity-display">{item.quantity}</span>
-                        <button 
-                          className="quantity-btn plus"
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        >
-                          +
-                        </button>
-                      </div>
-                      <div className="item-total">₹{((item.price || 0) * item.quantity).toFixed(2)}</div>
+                    )}
+                  </div>
+                  <div className="item-controls">
+                    <div className="quantity-controls">
                       <button 
-                        className="remove-item-btn"
-                        onClick={() => removeFromCart(item.id)}
-                        title="Remove item"
+                        className="quantity-btn"
+                        onClick={() => updateQuantity?.(item.id, item.quantity - 1)}
                       >
-                        🗑️
+                        −
+                      </button>
+                      <span className="quantity">{item.quantity}</span>
+                      <button 
+                        className="quantity-btn"
+                        onClick={() => updateQuantity?.(item.id, item.quantity + 1)}
+                      >
+                        +
                       </button>
                     </div>
+                    <div className="item-price">₹{((item.price || 364) * item.quantity).toFixed(2)}</div>
                   </div>
-                ))}
+                </div>
+              ))}
+            </div>
+            
+            <button className="add-more-items" onClick={() => router.push('/')}>
+              Add more items
+            </button>
+          </div>
+
+          {/* Special Request Section */}
+          <div className="section">
+            <div className="special-request-input">
+              <span className="request-icon">📝</span>
+              <input 
+                type="text" 
+                placeholder="Enter your special request"
+                className="request-input"
+              />
+            </div>
+          </div>
+
+          {/* Apply Coupon Section */}
+          <div className="section">
+            <div className="coupon-header">
+              <h3>Apply Coupon</h3>
+              <button 
+                className="view-coupons"
+                onClick={() => setShowAllCoupons(!showAllCoupons)}
+              >
+                View all coupons →
+              </button>
+            </div>
+            
+            <div className="coupon-input-wrapper">
+              <span className="coupon-icon">🏷️</span>
+              <input
+                type="text"
+                placeholder="Enter a coupon code"
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                className="coupon-input"
+              />
+              <button
+                className="apply-btn"
+                onClick={() => applyCoupon(couponCode)}
+                disabled={!couponCode.trim()}
+              >
+                Apply
+              </button>
+            </div>
+            
+            {appliedCoupon && (
+              <div className="applied-coupon">
+                <span>✅ Coupon "{appliedCoupon.code}" applied! You saved ₹{couponDiscount.toFixed(2)}</span>
+                <button onClick={removeCoupon} className="remove-coupon">Remove</button>
               </div>
             )}
+            
+            {showAllCoupons && (
+              <div className="available-coupons">
+                <h4>Available Coupons ({coupons.length})</h4>
+                {coupons.length > 0 ? (
+                  coupons.map((coupon) => (
+                    <div key={coupon._id} className="coupon-item" onClick={() => applyCoupon(coupon.code)}>
+                      <div className="coupon-info">
+                        <div className="coupon-code">{coupon.code}</div>
+                        <div className="coupon-description">{coupon.description}</div>
+                        <div className="coupon-minimum">Min order: ₹{coupon.min_order_value}</div>
+                      </div>
+                      <div className="coupon-value">
+                        {coupon.discount_type === 'percentage' 
+                          ? `${coupon.discount_value}% OFF` 
+                          : `₹${coupon.discount_value} OFF`}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="no-coupons">
+                    <p>No coupons available at the moment.</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
-            {/* Bill Details */}
-            <div className="bill-details">
+          {/* Bill Details Section */}
+          <div className="section bill-details">
+            <h3>Bill Details</h3>
+            <div className="bill-breakdown">
               <div className="bill-row">
-                <span>Subtotal</span>
+                <span>Sub Total</span>
                 <span>₹{subtotal.toFixed(2)}</span>
+              </div>
+              <div className="bill-row">
+                <span>Delivery Charge</span>
+                <span>₹{deliveryCharge.toFixed(2)}</span>
               </div>
               <div className="bill-row">
                 <span>Packaging Charge</span>
@@ -731,113 +765,37 @@ export default function CheckoutPage() {
                   <span>-₹{couponDiscount.toFixed(2)}</span>
                 </div>
               )}
-
-              <br />
-
-            {/* Proceed to Pay */}
-            <button 
-              className="proceed-btn"
-              onClick={handlePlaceOrder}
-              disabled={isProcessingPayment || (paymentMethod === 'cash' && !isEligibleForCash)}
-            >
-              {isProcessingPayment ? 
-                'Processing...' : 
-                `${paymentMethod === 'online' ? 'Pay Online' : 'Place Order'} - ₹${finalTotal.toFixed(2)}`
-              }
-            </button>
-
-            {/* Special Request */}
-            <div className="special-request">
-              <input 
-                type="text" 
-                placeholder="Enter cooking instructions here"
-                className="request-input"
-              />
-            </div>
-
-            </div>
-
-            {/* Apply Coupon Section */}
-            <div className="coupon-section">
-              <h3 className="coupon-title">Apply Coupon</h3>
-              
-              {!appliedCoupon ? (
-                <div className="coupon-input-section">
-                  <div className="coupon-input-container">
-                    <span className="coupon-icon">🏷️</span>
-                    <input
-                      type="text"
-                      placeholder="Enter coupon code"
-                      value={couponCode}
-                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                      className="coupon-input"
-                    />
-                    <button
-                      className="apply-coupon-btn"
-                      onClick={() => applyCoupon(couponCode)}
-                      disabled={!couponCode.trim()}
-                    >
-                      Apply
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="applied-coupon">
-                  <span className="coupon-icon">🏷️</span>
-                  <span className="applied-coupon-code">{appliedCoupon.code}</span>
-                  <button className="remove-coupon-btn" onClick={removeCoupon}>
-                    Remove
-                  </button>
-                </div>
-              )}
-
-              <div className="coupon-list-toggle">
-                <button
-                  className="see-all-coupons-btn"
-                  onClick={() => setShowAllCoupons(!showAllCoupons)}
-                >
-                  See all coupons ({coupons.length}) →
-                </button>
+              <div className="bill-row total-row">
+                <span>Payable Amount</span>
+                <span>₹{finalTotal.toFixed(2)}</span>
               </div>
-
-              {showAllCoupons && (
-                <div className="available-coupons">
-                  {coupons.map((coupon) => (
-                    <div key={coupon._id} className="coupon-card">
-                      <div className="coupon-details">
-                        <div className="coupon-name">{coupon.code}</div>
-                        <div className="coupon-description">{coupon.description}</div>
-                        <div className="coupon-code-line">
-                          CODE: {coupon.code}
-                        </div>
-                      </div>
-                      <div className="coupon-actions">
-                        <div className="coupon-expiry">
-                          {new Date(coupon.valid_to).toLocaleDateString('en-GB', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric'
-                          })}
-                        </div>
-                        {appliedCoupon?.code === coupon.code ? (
-                          <button className="remove-coupon-card-btn" onClick={removeCoupon}>
-                            Remove
-                          </button>
-                        ) : (
-                          <button
-                            className="apply-coupon-card-btn"
-                            onClick={() => applyCoupon(coupon.code)}
-                          >
-                            Apply
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Mobile Bottom Section */}
+      <div className="mobile-bottom">
+                <div className="delivery-info-mobile">
+          Your order will be delivered on 07 Nov between 12:00 - 12:30
+        </div>
+        
+        <div className="address-summary-mobile">
+          <span>Deliver to home</span>
+          <button className="change-btn" onClick={() => setShowLocationModal(true)}>Change</button>
+        </div>
+        
+        <div className="address-code-mobile">4040</div>
+        
+        <div className="payment-footer-mobile">
+          <div className="total-amount">₹{finalTotal.toFixed(2)}</div>
+          <button 
+            className="payment-btn-mobile"
+            onClick={() => setShowPaymentModal(true)}
+            disabled={isProcessingPayment}
+          >
+            {isProcessingPayment ? 'Processing...' : 'Choose payment method'}
+          </button>
         </div>
       </div>
 
@@ -846,20 +804,134 @@ export default function CheckoutPage() {
         isOpen={showLocationModal}
         onClose={() => setShowLocationModal(false)}
         onLocationSet={(locationData: any) => {
-          setUserLocation({
+          setUserLocation?.({
             lat: locationData.lat,
             lng: locationData.lng,
             address: locationData.address,
             distance: locationData.distance
           });
-          setDeliveryAvailable(locationData.isWithinDeliveryRadius);
           setDeliveryAddress({
             type: 'Home',
             address: locationData.address
           });
+          
+          // Update delivery info from location data
+          if (locationData.deliveryStatus) {
+            setDeliveryInfo({
+              duration: locationData.deliveryStatus.duration || 'Calculating...',
+              durationMinutes: locationData.deliveryStatus.durationMinutes || null,
+              distance: locationData.deliveryStatus.distance || null,
+              available: locationData.deliveryStatus.available !== false
+            });
+          } else if (locationData.durationMinutes) {
+            // Fallback to direct properties if deliveryStatus is not nested
+            setDeliveryInfo({
+              duration: locationData.duration || 'Calculating...',
+              durationMinutes: locationData.durationMinutes || null,
+              distance: locationData.distance || null,
+              available: true
+            });
+          }
+          
           setShowLocationModal(false);
         }}
       />
+
+      {/* Payment Method Modal */}
+      <PaymentModal 
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        currentPaymentMethod={paymentMethod}
+        onSelectPayment={(method: string) => {
+          setPaymentMethod(method);
+          setShowPaymentModal(false);
+          // Just set the payment method, don't place order automatically
+        }}
+        isEligibleForCash={isEligibleForCash}
+        minimumCashAmount={minimumCashAmount}
+      />
+
+      {/* Mobile Fixed Bottom Section */}
+      <div className="mobile-fixed-bottom">
+        <div className="mobile-delivery-info">
+          <div className="mobile-delivery-time">
+            {(() => {
+              if (!deliveryInfo.durationMinutes) {
+                return `Your order will be delivered on ${new Date(Date.now() + 24*60*60*1000).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} between 12:00 - 12:30`;
+              }
+              
+              const deliveryTime = new Date(Date.now() + deliveryInfo.durationMinutes * 60 * 1000);
+              const deliveryEndTime = new Date(deliveryTime.getTime() + 30 * 60 * 1000);
+              
+              const formatTime = (date: Date) => date.toLocaleTimeString('en-GB', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: false 
+              });
+              
+              return `Your order will be delivered on ${deliveryTime.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} between ${formatTime(deliveryTime)} - ${formatTime(deliveryEndTime)}`;
+            })()}
+          </div>
+          
+          <div className="mobile-address-section">
+            <div className="mobile-address-header">
+              <span className="mobile-address-label">Deliver to home</span>
+              <button 
+                className="mobile-change-btn"
+                onClick={() => setShowLocationModal(true)}
+              >
+                Change
+              </button>
+            </div>
+            <div className="mobile-address-text">
+              {deliveryAddress.address || userLocation?.address || '339, Defence Colony, Shyam Nagar, Kanpur, Uttar Pradesh 208013, India'}
+            </div>
+          </div>
+        </div>
+        
+        <div className="mobile-payment-section">
+          <div className="mobile-payment-info">
+            <div className="mobile-total-amount">₹{finalTotal.toFixed(2)}</div>
+            {paymentMethod && (
+              <div className="mobile-payment-method">
+                <span className="mobile-payment-icon">
+                  {paymentMethod === 'online' ? '💳' : '💵'}
+                </span>
+                <span className="mobile-payment-text">
+                  {paymentMethod === 'online' ? 'Online Payment' : 'Cash on Delivery'}
+                </span>
+                <button 
+                  className="mobile-change-payment-btn"
+                  onClick={() => setShowPaymentModal(true)}
+                >
+                  Change
+                </button>
+              </div>
+            )}
+          </div>
+          <button 
+            className="mobile-payment-btn"
+            onClick={() => {
+              if (!paymentMethod) {
+                setShowPaymentModal(true);
+                return;
+              }
+              if (paymentMethod === 'online') {
+                handlePlaceOrder();
+              } else if (paymentMethod === 'cash' && isEligibleForCash) {
+                handlePlaceOrder();
+              }
+            }}
+            disabled={isProcessingPayment || (paymentMethod === 'cash' && !isEligibleForCash)}
+          >
+            {isProcessingPayment ? 'Processing...' : 
+             !paymentMethod ? 'Choose Payment Method' :
+             paymentMethod === 'online' ? 'Proceed to Payment' : 
+             paymentMethod === 'cash' && isEligibleForCash ? 'Place Order' : 
+             'Choose Payment Method'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

@@ -13,6 +13,7 @@ interface CartContextType {
   cartItems: CartItem[];
   totalItems: number;
   subtotal: number;
+  isLoading: boolean;
   addToCart: (id: string, name?: string, variant?: string, price?: number) => void;
   removeFromCart: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
@@ -21,9 +22,12 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+export { CartContext };
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isClient, setIsClient] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   // Ensure we're on client side before accessing localStorage
   useEffect(() => {
@@ -32,7 +36,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // Load cart from localStorage on component mount
   useEffect(() => {
-    if (isClient) {
+    if (isClient && !isLoaded) {
       const savedCart = localStorage.getItem('cart');
       if (savedCart) {
         try {
@@ -42,13 +46,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
           console.error('Error loading cart from localStorage:', error);
         }
       }
+      setIsLoaded(true);
     }
-  }, [isClient]);
+  }, [isClient, isLoaded]);
 
-  // Save cart to localStorage whenever cartItems changes
+  // Save cart to localStorage whenever cartItems changes (but only after initial load)
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(cartItems));
-  }, [cartItems]);
+    if (isClient && isLoaded) {
+      localStorage.setItem('cart', JSON.stringify(cartItems));
+    }
+  }, [cartItems, isClient, isLoaded]);
 
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0);
@@ -92,6 +99,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       cartItems,
       totalItems,
       subtotal,
+      isLoading: !isLoaded,
       addToCart,
       removeFromCart,
       updateQuantity,

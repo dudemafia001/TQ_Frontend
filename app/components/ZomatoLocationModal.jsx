@@ -495,7 +495,8 @@ export default function LocationModal({ isOpen, onClose, onLocationSet }) {
         isWithinDeliveryRadius: deliveryStatus.available,
         distance: deliveryStatus.distance,
         duration: deliveryStatus.duration,
-        durationMinutes: deliveryStatus.durationMinutes
+        durationMinutes: deliveryStatus.durationMinutes,
+        deliveryStatus: deliveryStatus
       });
       onClose();
     }

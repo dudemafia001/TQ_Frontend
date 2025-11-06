@@ -303,86 +303,96 @@ export default function Home() {
                   const qty = getItemQuantity(item._id, selectedVariant);
 
                   return (
-                    <div key={item._id} className="product-card clean">
-                      <div className="product-content">
-                        <h3 className="product-title">{item.name}</h3>
-                        <p className="product-description">{item.description}</p>
-
-                        {item.variants.length > 1 && (
-                          <select
-                            className="variant-select"
-                            value={selectedVariant}
-                            onChange={(e) =>
-                              setSelectedVariants((prev) => ({
-                                ...prev,
-                                [item._id]: e.target.value,
-                              }))
-                            }
-                          >
-                            {item.variants.map((v: any) => (
-                              <option key={v.type} value={v.type}>
-                                {v.type} - ₹{v.price}
-                              </option>
-                            ))}
-                          </select>
-                        )}
-
-                        <div className="price-section">
-                          <span className="product-price">₹{selectedPrice}</span>
-                        </div>
-
-                        <div className="product-actions">
-                          {qty > 0 ? (
-                            <div className="quantity-controls">
-                              <button
-                                className="qty-btn minus"
-                                onClick={() =>
-                                  decreaseQty(item._id, selectedVariant)
-                                }
-                              >
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                  <line x1="5" y1="12" x2="19" y2="12"></line>
-                                </svg>
-                              </button>
-                              <span className="qty-display">{qty} in cart</span>
-                              <button
-                                className="qty-btn plus"
-                                onClick={() =>
-                                  increaseQty(item._id, selectedVariant)
-                                }
-                              >
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                  <line x1="12" y1="5" x2="12" y2="19"></line>
-                                  <line x1="5" y1="12" x2="19" y2="12"></line>
-                                </svg>
-                              </button>
-                              <button
-                                className="remove-from-cart"
-                                onClick={() => {
-                                  const key = `${item._id}_${selectedVariant}`;
-                                  removeFromCart(key);
-                                }}
-                              >
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                  <polyline points="3,6 5,6 21,6"></polyline>
-                                  <path d="M19,6V20a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6M8,6V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2V6"></path>
-                                </svg>
-                              </button>
+                    <div key={item._id} className="menu-item-card">
+                      <div className="item-content">
+                        <div className="item-info">
+                          <div className="veg-indicator">
+                            <div className={`veg-icon ${item.category.toLowerCase().includes('chicken') || item.category.toLowerCase().includes('mutton') || item.category.toLowerCase().includes('egg') ? 'non-veg' : 'veg'}`}>
+                              {item.category.toLowerCase().includes('chicken') || item.category.toLowerCase().includes('mutton') || item.category.toLowerCase().includes('egg') ? '🔺' : '🟢'}
                             </div>
-                          ) : (
-                            <button
-                              className="add-to-cart-btn"
-                              onClick={() =>
-                                addToCart(item._id, selectedVariant)
+                          </div>
+                          
+                          <h3 className="item-name">{item.name}</h3>
+                          
+                          <div className="item-description">
+                            {item.description}
+                          </div>
+
+                          {item.variants.length > 1 && (
+                            <select
+                              className="variant-select"
+                              value={selectedVariant}
+                              onChange={(e) =>
+                                setSelectedVariants((prev) => ({
+                                  ...prev,
+                                  [item._id]: e.target.value,
+                                }))
                               }
                             >
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <line x1="12" y1="5" x2="12" y2="19"></line>
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                              </svg>
-                              Add to Cart
-                            </button>
+                              {item.variants.map((v: any) => (
+                                <option key={v.type} value={v.type}>
+                                  {v.type} - ₹{v.price}
+                                </option>
+                              ))}
+                            </select>
                           )}
+                        </div>
+
+                        <div className="item-image-section">
+                          <div className="item-image">
+                            {item.image ? (
+                              <Image 
+                                src={item.image} 
+                                alt={item.name}
+                                width={120}
+                                height={120}
+                                style={{ objectFit: 'cover', borderRadius: '8px' }}
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display = 'none';
+                                }}
+                              />
+                            ) : (
+                              <div className="placeholder-image">
+                                <span>🍛</span>
+                                <small>No Image</small>
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div className="item-actions">
+                            {qty > 0 ? (
+                              <div className="quantity-controls">
+                                <button
+                                  className="qty-btn minus"
+                                  onClick={() =>
+                                    decreaseQty(item._id, selectedVariant)
+                                  }
+                                >
+                                  −
+                                </button>
+                                <span className="qty-display">{qty}</span>
+                                <button
+                                  className="qty-btn plus"
+                                  onClick={() =>
+                                    increaseQty(item._id, selectedVariant)
+                                  }
+                                >
+                                  +
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                className="add-btn"
+                                onClick={() =>
+                                  addToCart(item._id, selectedVariant)
+                                }
+                              >
+                                Add
+                              </button>
+                            )}
+                            
+                            <div className="item-price">₹{selectedPrice}</div>
+                          </div>
                         </div>
                       </div>
                     </div>
