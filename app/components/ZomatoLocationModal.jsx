@@ -520,6 +520,21 @@ export default function LocationModal({ isOpen, onClose, onLocationSet }) {
     }
   }, [isOpen]);
 
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      // Store original body overflow
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      // Prevent scroll
+      document.body.style.overflow = 'hidden';
+      
+      return () => {
+        // Restore original overflow when modal closes
+        document.body.style.overflow = originalStyle;
+      };
+    }
+  }, [isOpen]);
+
   // Reset state when modal closes
   useEffect(() => {
     if (!isOpen) {
@@ -552,6 +567,15 @@ export default function LocationModal({ isOpen, onClose, onLocationSet }) {
           </button>
         </div>
 
+        {/* Restaurant Location Info */}
+        <div className="restaurant-location-info">
+          <div className="restaurant-icon">🏪</div>
+          <div className="restaurant-details">
+            <div className="restaurant-name">The Quisine - Cloud Kitchen And Caterers</div>
+            <div className="delivery-radius">We deliver within 7 km radius</div>
+          </div>
+        </div>
+
         {/* Search Bar */}
         <div className="search-section">
           <div className="search-input-container">
@@ -572,6 +596,28 @@ export default function LocationModal({ isOpen, onClose, onLocationSet }) {
                 <div className="spinner"></div>
               </div>
             )}
+            
+            {/* Current Location Button - Inside search bar */}
+            <button
+              className="current-location-btn-inline"
+              onClick={getCurrentLocation}
+              disabled={currentLocationLoading}
+              title="Use current location"
+            >
+              {currentLocationLoading ? (
+                <div className="spinner-small"></div>
+              ) : (
+                <svg className="location-target-icon" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="2" fill="currentColor"/>
+                  <circle cx="12" cy="12" r="7" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1" fill="none"/>
+                  <line x1="12" y1="0.5" x2="12" y2="3.5" stroke="currentColor" strokeWidth="1.5"/>
+                  <line x1="12" y1="20.5" x2="12" y2="23.5" stroke="currentColor" strokeWidth="1.5"/>
+                  <line x1="0.5" y1="12" x2="3.5" y2="12" stroke="currentColor" strokeWidth="1.5"/>
+                  <line x1="20.5" y1="12" x2="23.5" y2="12" stroke="currentColor" strokeWidth="1.5"/>
+                </svg>
+              )}
+            </button>
           </div>
           
           {/* Enhanced Search Results */}
@@ -654,43 +700,18 @@ export default function LocationModal({ isOpen, onClose, onLocationSet }) {
         {/* Map Container */}
         <div className="map-container">
           <div ref={mapRef} className="map"></div>
-          
-          {/* Map Overlay Instructions */}
-          <div className="map-instruction">
-            Move pin to your exact delivery location
-          </div>
-
-          {/* Current Location Button */}
-          <button 
-            className="current-location-btn"
-            onClick={getCurrentLocation}
-            disabled={currentLocationLoading}
-          >
-            {currentLocationLoading ? (
-              <div className="btn-loading">
-                <div className="spinner-small"></div>
-              </div>
-            ) : (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-                <circle cx="12" cy="12" r="3" fill="currentColor"/>
-              </svg>
-            )}
-            Use current location
-          </button>
         </div>
 
-        {/* Delivery Details */}
+        {/* Selected Address and Delivery Status */}
         {selectedAddress && (
-          <div className="delivery-details">
-            <div className="selected-location">
+          <div className="address-status-section">
+            {/* Selected Address - Single Line */}
+            <div className="selected-address-compact">
               <div className="location-icon">📍</div>
-              <div className="location-info">
-                <div className="location-name">{selectedAddress.address.split(',')[0]}</div>
-                <div className="location-full">{selectedAddress.address}</div>
-              </div>
+              <div className="address-text">{selectedAddress.address}</div>
             </div>
             
+            {/* Delivery Status */}
             {deliveryStatus && (
               <div className={`delivery-status ${
                 deliveryStatus.loading ? 'loading' : 
@@ -698,7 +719,7 @@ export default function LocationModal({ isOpen, onClose, onLocationSet }) {
               }`}>
                 <div className="status-message">{deliveryStatus.message}</div>
                 {deliveryStatus.available && !deliveryStatus.loading && deliveryStatus.duration && (
-                  <div className="delivery-details">
+                  <div className="delivery-info-items">
                     <div className="detail-item">
                       <span className="detail-icon">📍</span>
                       <span className="detail-text">Distance: {deliveryStatus.distance} km</span>
