@@ -56,37 +56,6 @@ export default function CheckoutPage() {
   const { user, isAuthenticated, loading: authLoading } = useContext(AuthContext) || {};
   const { userLocation, setUserLocation } = useContext(LocationContext) || {};
 
-  // Authentication check - redirect to auth page if not signed in
-  useEffect(() => {
-    // Only check authentication after auth loading is complete
-    if (!authLoading && !isAuthenticated && !user) {
-      router.push('/auth?redirect=checkout');
-      return;
-    }
-  }, [isAuthenticated, user, router, authLoading]);
-
-  // Show loading while auth is being checked
-  if (authLoading) {
-    return (
-      <div className="checkout-container">
-        <div className="checkout-loading">
-          <p>Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Don't render checkout if user is not authenticated
-  if (!isAuthenticated && !user) {
-    return (
-      <div className="checkout-container">
-        <div className="checkout-loading">
-          <p>Redirecting to sign in...</p>
-        </div>
-      </div>
-    );
-  }
-
   // ALL STATE HOOKS - Must be called before any conditional returns
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     fullName: '',
@@ -134,11 +103,12 @@ export default function CheckoutPage() {
   // ALL EFFECT HOOKS - Must be called before any conditional returns  
   // Authentication check - redirect to auth page if not signed in
   useEffect(() => {
-    if (!isAuthenticated && !user) {
+    // Only check authentication after auth loading is complete
+    if (!authLoading && !isAuthenticated && !user) {
       router.push('/auth?redirect=checkout');
       return;
     }
-  }, [isAuthenticated, user, router]);
+  }, [isAuthenticated, user, router, authLoading]);
 
   // Fetch real user data
   useEffect(() => {
@@ -189,16 +159,6 @@ export default function CheckoutPage() {
       });
     }
   }, [userLocation]);
-
-  // Constants
-  const minimumCashAmount = 499;
-  const packagingCharge = 20;
-  const deliveryCharge = 0;
-
-  // Calculate subtotal
-  const subtotal = (cartItems || []).reduce((sum: number, item: CartItemType) => sum + ((item.price || 0) * item.quantity), 0);
-  const finalTotal = subtotal + packagingCharge + deliveryCharge - couponDiscount;
-  const isEligibleForCash = finalTotal >= minimumCashAmount;
 
   // Load coupons
   useEffect(() => {
@@ -288,6 +248,38 @@ export default function CheckoutPage() {
       window.removeEventListener('resize', handleResize);
     };
   }, []);
+
+  // Constants
+  const minimumCashAmount = 499;
+  const packagingCharge = 20;
+  const deliveryCharge = 0;
+
+  // Calculate subtotal
+  const subtotal = (cartItems || []).reduce((sum: number, item: CartItemType) => sum + ((item.price || 0) * item.quantity), 0);
+  const finalTotal = subtotal + packagingCharge + deliveryCharge - couponDiscount;
+  const isEligibleForCash = finalTotal >= minimumCashAmount;
+
+  // Show loading while auth is being checked
+  if (authLoading) {
+    return (
+      <div className="checkout-container">
+        <div className="checkout-loading">
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render checkout if user is not authenticated
+  if (!isAuthenticated && !user) {
+    return (
+      <div className="checkout-container">
+        <div className="checkout-loading">
+          <p>Redirecting to sign in...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Functions
   const applyCoupon = (code: string) => {
