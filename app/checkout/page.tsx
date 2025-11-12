@@ -53,16 +53,28 @@ const buildApiUrl = (endpoint: string) => {
 export default function CheckoutPage() {
   const router = useRouter();
   const { cartItems, updateQuantity, isLoading } = useContext(CartContext) || {};
-  const { user, isAuthenticated } = useContext(AuthContext) || {};
+  const { user, isAuthenticated, loading: authLoading } = useContext(AuthContext) || {};
   const { userLocation, setUserLocation } = useContext(LocationContext) || {};
 
   // Authentication check - redirect to auth page if not signed in
   useEffect(() => {
-    if (!isAuthenticated && !user) {
+    // Only check authentication after auth loading is complete
+    if (!authLoading && !isAuthenticated && !user) {
       router.push('/auth?redirect=checkout');
       return;
     }
-  }, [isAuthenticated, user, router]);
+  }, [isAuthenticated, user, router, authLoading]);
+
+  // Show loading while auth is being checked
+  if (authLoading) {
+    return (
+      <div className="checkout-container">
+        <div className="checkout-loading">
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Don't render checkout if user is not authenticated
   if (!isAuthenticated && !user) {
@@ -276,17 +288,6 @@ export default function CheckoutPage() {
       window.removeEventListener('resize', handleResize);
     };
   }, []);
-
-  // Don't render checkout if user is not authenticated
-  if (!isAuthenticated && !user) {
-    return (
-      <div className="checkout-container">
-        <div className="checkout-loading">
-          <p>Redirecting to sign in...</p>
-        </div>
-      </div>
-    );
-  }
 
   // Functions
   const applyCoupon = (code: string) => {

@@ -21,7 +21,7 @@ export default function Home() {
 
   const { addToCart: addToCartContext, updateQuantity, removeFromCart, cartItems, totalItems: cartTotalItems, subtotal } = useCart();
   const { userLocation, deliveryAvailable, setUserLocation, setDeliveryAvailable, clearLocation } = useLocation();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
 
   useEffect(() => {
     // ✅ Load Bootstrap only on client
@@ -82,12 +82,6 @@ export default function Home() {
   };
 
   const addToCart = (id: string, variant: string) => {
-    // Check if user is authenticated before adding to cart
-    if (!isAuthenticated || !user) {
-      router.push('/auth?redirect=menu');
-      return;
-    }
-    
     const key = `${id}_${variant}`;
     const product = products.find((p: any) => p._id === id);
     const variantObj = product?.variants.find((v: any) => v.type === variant);
@@ -96,12 +90,6 @@ export default function Home() {
   };
 
   const increaseQty = (id: string, variant: string) => {
-    // Check if user is authenticated before increasing quantity
-    if (!isAuthenticated || !user) {
-      router.push('/auth?redirect=menu');
-      return;
-    }
-    
     const key = `${id}_${variant}`;
     const product = products.find((p: any) => p._id === id);
     const variantObj = product?.variants.find((v: any) => v.type === variant);
@@ -419,6 +407,11 @@ export default function Home() {
                   className="btn btn-success"
                   onClick={() => {
                     // Check authentication before proceeding to checkout
+                    if (authLoading) {
+                      // Still loading, don't proceed yet
+                      return;
+                    }
+                    
                     if (!isAuthenticated || !user) {
                       router.push('/auth?redirect=checkout');
                       return;
@@ -446,8 +439,9 @@ export default function Home() {
                       router.push('/checkout');
                     }, 150); // Small delay to ensure modal close animation completes
                   }}
+                  disabled={authLoading}
                 >
-                  Checkout
+                  {authLoading ? 'Loading...' : 'Checkout'}
                 </button>
               </div>
             )}
