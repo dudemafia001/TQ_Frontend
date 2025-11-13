@@ -124,63 +124,76 @@
 }
 
 .user-dropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-  border: 1px solid #e2e8f0;
-  min-width: 200px;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-10px);
-  transition: all 0.3s ease;
-  z-index: 1001;
-  margin-top: 8px;
+  position: absolute !important;
+  top: 100% !important;
+  right: 0 !important;
+  background: #fff !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15) !important;
+  border: 1px solid #e2e8f0 !important;
+  min-width: 200px !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transform: translateY(-10px) !important;
+  transition: all 0.3s ease !important;
+  z-index: 1001 !important;
+  margin-top: 8px !important;
+  padding: 0 !important;
+  list-style: none !important;
 }
 
 .user-dropdown.show {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translateY(0) !important;
 }
 
 .dropdown-header {
-  padding: 16px 20px 12px;
+  display: block !important;
+  width: 100% !important;
+  padding: 12px 20px !important;
   border-bottom: 1px solid #f1f5f9;
+  margin: 0 !important;
+  background: none !important;
 }
 
 .user-name {
-  font-weight: 600;
-  color: #2d3748;
-  font-size: 14px;
+  font-weight: 700 !important;
+  color: #2d3748 !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
 }
 
-.dropdown-item {
-  display: block;
-  width: 100%;
-  padding: 12px 20px;
-  color: #4a5568;
-  text-decoration: none;
-  font-size: 14px;
-  border: none;
-  background: none;
-  text-align: left;
-  transition: all 0.2s ease;
-  cursor: pointer;
+.user-dropdown .dropdown-item {
+  display: block !important;
+  width: 100% !important;
+  padding: 12px 20px !important;
+  color: #4a5568 !important;
+  text-decoration: none !important;
+  font-size: 14px !important;
+  border: none !important;
+  background: none !important;
+  text-align: left !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  line-height: 1.5 !important;
 }
 
-.dropdown-item:hover {
-  background: #f7fafc;
-  color: #B8860B;
+.user-dropdown .dropdown-item:hover,
+.user-dropdown .dropdown-item:focus {
+  background: #f7fafc !important;
+  color: #B8860B !important;
+  text-decoration: none !important;
 }
 
-.logout-btn {
+.user-dropdown .dropdown-item.logout-btn {
   color: #e53e3e !important;
 }
 
-.logout-btn:hover {
+.user-dropdown .dropdown-item.logout-btn:hover,
+.user-dropdown .dropdown-item.logout-btn:focus {
   background: #fed7d7 !important;
   color: #c53030 !important;
 }
@@ -517,7 +530,75 @@
 /* Focus states for accessibility */
 .header-icon-btn:focus,
 .nav-item:focus,
-.dropdown-item:focus {
+.user-dropdown .dropdown-item:focus {
   outline: 2px solid #B8860B;
   outline-offset: 2px;
+}
+
+/* High specificity overrides for dropdown items */
+.unified-header .user-dropdown-container .user-dropdown .dropdown-item {
+  display: block !important;
+  width: 100% !important;
+  padding: 12px 20px !important;
+  color: #4a5568 !important;
+  text-decoration: none !important;
+  font-size: 14px !important;
+  border: none !important;
+  background: transparent !important;
+  text-align: left !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  line-height: 1.5 !important;
+  font-weight: 400 !important;
+  white-space: nowrap !important;
+}
+
+.unified-header .user-dropdown-container .user-dropdown .dropdown-item:hover,
+.unified-header .user-dropdown-container .user-dropdown .dropdown-item:focus {
+  background: #f7fafc !important;
+  color: #B8860B !important;
+  text-decoration: none !important;
+}
+
+/* Override Bootstrap dropdown styles specifically */
+.user-dropdown .dropdown-item.dropdown-item.dropdown-item {
+  color: #4a5568 !important;
+  background-color: transparent !important;
+  border: 0 !important;
+}
+
+.user-dropdown .dropdown-item.dropdown-item.dropdown-item:hover {
+  color: #B8860B !important;
+  background-color: #f7fafc !important;
+}
+
+/* Final override with maximum specificity */
+.unified-header .header-container .user-dropdown-container .user-dropdown .dropdown-item {
+  display: block !important;
+  width: 100% !important;
+  padding: 12px 20px !important;
+  color: #4a5568 !important;
+  text-decoration: none !important;
+  font-size: 14px !important;
+  border: none !important;
+  background: transparent !important;
+  text-align: left !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  line-height: 1.5 !important;
+  font-weight: 400 !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+}
+
+.unified-header .header-container .user-dropdown-container .user-dropdown .dropdown-item:hover,
+.unified-header .header-container .user-dropdown-container .user-dropdown .dropdown-item:focus,
+.unified-header .header-container .user-dropdown-container .user-dropdown .dropdown-item:active {
+  background: #f7fafc !important;
+  color: #B8860B !important;
+  text-decoration: none !important;
 }

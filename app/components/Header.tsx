@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { useRouter, usePathname } from 'next/navigation';
+import './Header.css';
 
 export default function Header() {
   const { user, logout, isAuthenticated } = useAuth();
@@ -92,32 +93,30 @@ export default function Header() {
               </svg>
             </button>
             
-            {/* Dropdown Menu - Only render when mounted to prevent hydration issues */}
-            {isMounted && (
-              <div className={`user-dropdown ${isDropdownOpen ? 'show' : ''}`}>
-                {isAuthenticated ? (
-                  <>
-                    <div className="dropdown-header">
-                      <span className="user-name">{user}</span>
-                    </div>
-                    <Link href="/orders" className="dropdown-item" onClick={() => setIsDropdownOpen(false)}>
-                      My Orders
-                    </Link>
-                    <Link href="/account" className="dropdown-item" onClick={() => setIsDropdownOpen(false)}>
-                      Account Details
-                    </Link>
-                    <div className="dropdown-divider"></div>
-                    <button className="dropdown-item logout-btn" onClick={handleLogout}>
-                      Logout
-                    </button>
-                  </>
-                ) : (
-                  <Link href="/auth" className="dropdown-item" onClick={() => setIsDropdownOpen(false)}>
-                    Sign In
+            {/* Dropdown Menu */}
+            <div className={`user-dropdown ${isDropdownOpen ? 'show' : ''}`}>
+              {isAuthenticated ? (
+                <>
+                  <div className="dropdown-header">
+                    <span className="user-name">{user}</span>
+                  </div>
+                  <Link href="/orders" className="dropdown-item" onClick={() => setIsDropdownOpen(false)}>
+                    My Orders
                   </Link>
-                )}
-              </div>
-            )}
+                  <Link href="/account" className="dropdown-item" onClick={() => setIsDropdownOpen(false)}>
+                    Account Details
+                  </Link>
+                  <div className="dropdown-divider"></div>
+                  <button className="dropdown-item logout-btn" onClick={handleLogout}>
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <Link href="/auth" className="dropdown-item" onClick={() => setIsDropdownOpen(false)}>
+                  Sign In
+                </Link>
+              )}
+            </div>
           </div>
 
           {/* Cart Icon - Only render cart button when mounted and check pathname */}

@@ -53,7 +53,7 @@ const buildApiUrl = (endpoint: string) => {
 export default function CheckoutPage() {
   const router = useRouter();
   const { cartItems, updateQuantity, isLoading } = useContext(CartContext) || {};
-  const { user, isAuthenticated, loading: authLoading } = useContext(AuthContext) || {};
+  const { user, fullName, isAuthenticated, loading: authLoading } = useContext(AuthContext) || {};
   const { userLocation, setUserLocation } = useContext(LocationContext) || {};
 
   // ALL STATE HOOKS - Must be called before any conditional returns
@@ -115,27 +115,38 @@ export default function CheckoutPage() {
     const fetchUserData = async () => {
       if (user) {
         try {
-          // For now, use the username from auth context and construct phone/email
-          // In a real app, you'd have a user profile endpoint
-          setCustomerInfo({
-            fullName: user,  // Using username as full name
-            phone: '+918299585475',  // Real phone number
-            email: 'ambujdwivedi1947@gmail.com'  // Real email
-          });
+          // Fetch user profile from backend
+          const apiUrl = buildApiUrl(`${config.api.endpoints.auth.profile}/${user}`);
+          const response = await fetch(apiUrl);
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.user) {
+              setCustomerInfo({
+                fullName: data.user.fullName || user,
+                phone: data.user.mobile || '',
+                email: data.user.email || `${user}@example.com`  // Fallback email if not stored
+              });
+            } else {
+              throw new Error('Failed to fetch user data');
+            }
+          } else {
+            throw new Error('Failed to fetch user data');
+          }
         } catch (error) {
           console.error('Error fetching user data:', error);
-          // Fallback to basic user data
+          // Fallback to basic user data from context
           setCustomerInfo({
-            fullName: user,
-            phone: '+918299585475',
-            email: 'ambujdwivedi1947@gmail.com'
+            fullName: fullName || user,
+            phone: '',  // Empty phone if we can't fetch it
+            email: `${user}@example.com`  // Fallback email
           });
         }
       }
     };
 
     fetchUserData();
-  }, [user]);
+  }, [user, fullName]);
 
   // Calculate delivery info when userLocation changes or component mounts
   useEffect(() => {
@@ -568,7 +579,6 @@ export default function CheckoutPage() {
             </div>
             <div className="delivery-info">
               <div className="delivery-option selected">
-                <span className="delivery-label">Deliver Later</span>
                 <div className="delivery-time">
                   {(() => {
                     if (!deliveryInfo.durationMinutes) {

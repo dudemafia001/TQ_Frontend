@@ -13,7 +13,8 @@ const config = {
       auth: {
         login: '/api/auth/login',
         signup: '/api/auth/signup',
-        logout: '/api/auth/logout'
+        logout: '/api/auth/logout',
+        profile: '/api/auth/profile'
       },
       
       // OTP endpoints
