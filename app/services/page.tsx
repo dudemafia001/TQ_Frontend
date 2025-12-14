@@ -28,12 +28,23 @@ export default function ServicesPage() {
         </div>
       </section>
 
+      {/* Quick Navigation */}
+      <section className="services-navigation">
+        <div className="container">
+          <div className="nav-links">
+            <a href="#bulk-food" className="nav-link">🍽️ Bulk Food</a>
+            <a href="#catering" className="nav-link">🎉 Event Catering</a>
+            <a href="#boxes" className="nav-link">📦 Customized Boxes</a>
+          </div>
+        </div>
+      </section>
+
       {/* Services Content */}
       <section className="services-content">
         <div className="container">
           
           {/* Bulk Food Service */}
-          <div className="service-section">
+          <div className="service-section" id="bulk-food">
             <div className="service-header">
               <h2>🍽️ Bulk Food Orders</h2>
               <p>Perfect for offices, gatherings, and large groups</p>
@@ -103,7 +114,7 @@ export default function ServicesPage() {
           </div>
 
           {/* Event Catering Service */}
-          <div className="service-section">
+          <div className="service-section" id="catering">
             <div className="service-header">
               <h2>🎉 Event Catering</h2>
               <p>Complete catering solutions for weddings, parties, and special occasions</p>
@@ -172,7 +183,7 @@ export default function ServicesPage() {
           </div>
 
           {/* Customized Boxes Service */}
-          <div className="service-section">
+          <div className="service-section" id="boxes">
             <div className="service-header">
               <h2>📦 Customized Food Boxes</h2>
               <p>Convenient individual meal boxes for events and corporate orders</p>

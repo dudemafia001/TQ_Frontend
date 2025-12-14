@@ -46,6 +46,45 @@
   padding: 0 20px;
 }
 
+/* Services Navigation */
+.services-navigation {
+  background: #f9fafb;
+  padding: 20px 0;
+  border-bottom: 2px solid #e2e8f0;
+  position: sticky;
+  top: 80px;
+  z-index: 100;
+}
+
+.nav-links {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.nav-link {
+  padding: 12px 24px;
+  background: white;
+  border: 2px solid #124f31;
+  border-radius: 50px;
+  color: #124f31;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.nav-link:hover {
+  background: #124f31;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(18, 79, 49, 0.2);
+}
+
 /* Service Section */
 .service-section {
   background: white;
@@ -53,6 +92,7 @@
   box-shadow: 0 4px 20px rgba(0,0,0,0.08);
   margin-bottom: 40px;
   padding: 40px;
+  scroll-margin-top: 120px;
 }
 
 .service-header {
@@ -187,6 +227,10 @@
 
 .catering-price {
   background: linear-gradient(135deg, #dd9933 0%, #e6a940 100%);
+}
+
+.catering-price .price {
+  color: white;
 }
 
 /* Boxes Grid */
@@ -361,6 +405,25 @@
 
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
+  .services-navigation {
+    top: 60px;
+    padding: 15px 0;
+  }
+
+  .nav-links {
+    gap: 10px;
+    padding: 0 10px;
+  }
+
+  .nav-link {
+    padding: 10px 16px;
+    font-size: 0.9rem;
+  }
+
+  .service-section {
+    scroll-margin-top: 100px;
+  }
+
   .services-hero {
     padding: 60px 0 40px;
   }
