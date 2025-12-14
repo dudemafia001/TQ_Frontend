@@ -123,19 +123,28 @@ function AuthPageContent() {
 
       const data = await res.json();
       if (res.ok) {
-        login(data.username || username, data.fullName);
-        setMessage(data.message);
+        if (isSignup) {
+          // After signup, switch to sign-in mode
+          setMessage("Account created successfully! Please sign in.");
+          setIsSignup(false);
+          // Clear password field for security
+          setPassword("");
+        } else {
+          // Login flow
+          login(data.username || username, data.fullName);
+          setMessage(data.message);
 
-        setTimeout(() => {
-          const redirect = searchParams.get('redirect');
-          if (redirect === 'checkout') {
-            router.push("/checkout");
-          } else if (redirect === 'menu') {
-            router.push("/");
-          } else {
-            router.push("/");
-          }
-        }, 800);
+          setTimeout(() => {
+            const redirect = searchParams.get('redirect');
+            if (redirect === 'checkout') {
+              router.push("/checkout");
+            } else if (redirect === 'menu') {
+              router.push("/");
+            } else {
+              router.push("/");
+            }
+          }, 800);
+        }
       } else {
         setMessage(data.message || "Authentication failed");
       }
