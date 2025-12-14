@@ -73,6 +73,8 @@ export default function CheckoutPage() {
     type: 'Home',
     address: ''
   });
+  
+  const [manualAddress, setManualAddress] = useState<string>('');
 
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -444,7 +446,11 @@ export default function CheckoutPage() {
             userId: user,
             cartItems,
             customerInfo,
-            deliveryAddress,
+            deliveryAddress: {
+              address: manualAddress || deliveryAddress.address || userLocation?.address || 'No address provided',
+              lat: userLocation?.lat,
+              lng: userLocation?.lng
+            },
             addressDetails,
             subtotal,
             packagingCharge,
@@ -569,34 +575,33 @@ export default function CheckoutPage() {
               <div className="address-text">
                 {deliveryAddress.address || userLocation?.address || '4040, Nachital Nilaya, 11th Cross Road, Bellandur Main Rd, Bellandur, Bengaluru, Karnataka, India, Bengaluru, 560103'}
               </div>
-            </div>
-          </div>
-
-          {/* Delivery Time Section */}
-          <div className="section">
-            <div className="section-header">
-              <h2>Delivery Time</h2>
-            </div>
-            <div className="delivery-info">
-              <div className="delivery-option selected">
-                <div className="delivery-time">
-                  {(() => {
-                    if (!deliveryInfo.durationMinutes) {
-                      return `Your order will be delivered on ${new Date(Date.now() + 24*60*60*1000).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} between 12:00 - 12:30`;
-                    }
-                    
-                    const deliveryTime = new Date(Date.now() + deliveryInfo.durationMinutes * 60 * 1000);
-                    const deliveryEndTime = new Date(deliveryTime.getTime() + 30 * 60 * 1000); // 30 minutes window
-                    
-                    const formatTime = (date: Date) => date.toLocaleTimeString('en-GB', { 
-                      hour: '2-digit', 
-                      minute: '2-digit',
-                      hour12: false 
-                    });
-                    
-                    return `Your order will be delivered on ${deliveryTime.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} between ${formatTime(deliveryTime)} - ${formatTime(deliveryEndTime)}`;
-                  })()}
-                </div>
+              
+              {/* Manual Address Input */}
+              <div className="manual-address-input" style={{ marginTop: '15px' }}>
+                <label htmlFor="manual-address" style={{ display: 'block', marginBottom: '8px', fontWeight: '500', fontSize: '14px' }}>
+                  Complete Address <span style={{ color: 'red' }}>*</span> (House No., Street, Landmark)
+                </label>
+                <textarea
+                  id="manual-address"
+                  value={manualAddress}
+                  onChange={(e) => setManualAddress(e.target.value)}
+                  placeholder="Enter your complete delivery address with house number, street name, and landmark"
+                  rows={3}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: manualAddress.trim() === '' ? '1px solid #ff6b6b' : '1px solid #ddd',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontFamily: 'inherit',
+                    resize: 'vertical',
+                    minHeight: '80px'
+                  }}
+                />
+                <p style={{ fontSize: '12px', color: manualAddress.trim() === '' ? '#ff6b6b' : '#666', marginTop: '5px' }}>
+                  {manualAddress.trim() === '' ? '⚠️ This field is required for delivery' : 'This will be used as your delivery address'}
+                </p>
               </div>
             </div>
           </div>
@@ -644,6 +649,10 @@ export default function CheckoutPage() {
               <button 
                 className="place-order-btn"
                 onClick={() => {
+                  if (!manualAddress || manualAddress.trim() === '') {
+                    alert('Please enter your complete delivery address');
+                    return;
+                  }
                   if (!paymentMethod) {
                     alert('Please select a payment method first');
                     return;
@@ -896,25 +905,6 @@ export default function CheckoutPage() {
       {/* Mobile Fixed Bottom Section */}
       <div className="mobile-fixed-bottom">
         <div className="mobile-delivery-info">
-          <div className="mobile-delivery-time">
-            {(() => {
-              if (!deliveryInfo.durationMinutes) {
-                return `Your order will be delivered on ${new Date(Date.now() + 24*60*60*1000).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} between 12:00 - 12:30`;
-              }
-              
-              const deliveryTime = new Date(Date.now() + deliveryInfo.durationMinutes * 60 * 1000);
-              const deliveryEndTime = new Date(deliveryTime.getTime() + 30 * 60 * 1000);
-              
-              const formatTime = (date: Date) => date.toLocaleTimeString('en-GB', { 
-                hour: '2-digit', 
-                minute: '2-digit',
-                hour12: false 
-              });
-              
-              return `Your order will be delivered on ${deliveryTime.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} between ${formatTime(deliveryTime)} - ${formatTime(deliveryEndTime)}`;
-            })()}
-          </div>
-          
           <div className="mobile-address-section">
             <div className="mobile-address-header">
               <span className="mobile-address-label">Deliver to home</span>
@@ -954,6 +944,10 @@ export default function CheckoutPage() {
           <button 
             className="mobile-payment-btn"
             onClick={() => {
+              if (!manualAddress || manualAddress.trim() === '') {
+                alert('Please enter your complete delivery address');
+                return;
+              }
               if (!paymentMethod) {
                 setShowPaymentModal(true);
                 return;

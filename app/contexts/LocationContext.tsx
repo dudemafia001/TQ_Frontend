@@ -41,7 +41,8 @@ export function LocationProvider({ children }: { children: ReactNode }) {
           const isRecent = (Date.now() - locationData.timestamp) < 24 * 60 * 60 * 1000;
           if (isRecent) {
             setUserLocationState(locationData);
-            setDeliveryAvailableState(locationData.isWithinDeliveryRadius);
+            // Default to true if isWithinDeliveryRadius is not set
+            setDeliveryAvailableState(locationData.isWithinDeliveryRadius !== false ? true : false);
           }
         } catch (error) {
           console.error("Error parsing saved location:", error);

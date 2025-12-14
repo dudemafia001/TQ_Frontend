@@ -83,7 +83,34 @@ export default function OrderDetailsModal({ order, isOpen, onClose }) {
               
               {/* Always Show Map Actions */}
               <div className="location-section">
-                {order.deliveryAddress.coordinates ? (
+                {(order.deliveryAddress.lat && order.deliveryAddress.lng) ? (
+                  <div className="location-details">
+                    <div className="coordinates-badge">
+                      📌 Lat: {order.deliveryAddress.lat?.toFixed(6)}, 
+                      Lng: {order.deliveryAddress.lng?.toFixed(6)}
+                    </div>
+                    
+                    {/* Google Maps Actions */}
+                    <div className="map-actions">
+                      <a 
+                        href={`https://www.google.com/maps?q=${order.deliveryAddress.lat},${order.deliveryAddress.lng}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="map-button primary"
+                      >
+                        🗺️ Open in Google Maps
+                      </a>
+                      <a 
+                        href={`https://maps.google.com/maps?daddr=${order.deliveryAddress.lat},${order.deliveryAddress.lng}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="map-button secondary"
+                      >
+                        🧭 Get Directions
+                      </a>
+                    </div>
+                  </div>
+                ) : (order.deliveryAddress.coordinates && order.deliveryAddress.coordinates.lat && order.deliveryAddress.coordinates.lng) ? (
                   <div className="location-details">
                     <div className="coordinates-badge">
                       📌 Lat: {order.deliveryAddress.coordinates.lat?.toFixed(6)}, 
@@ -98,7 +125,7 @@ export default function OrderDetailsModal({ order, isOpen, onClose }) {
                         rel="noopener noreferrer"
                         className="map-button primary"
                       >
-                        � Open in Google Maps
+                        🗺️ Open in Google Maps
                       </a>
                       <a 
                         href={`https://maps.google.com/maps?daddr=${order.deliveryAddress.coordinates.lat},${order.deliveryAddress.coordinates.lng}`}
@@ -119,7 +146,7 @@ export default function OrderDetailsModal({ order, isOpen, onClose }) {
                       rel="noopener noreferrer"
                       className="map-button view-location"
                     >
-                      � View Location
+                      🔍 View Location
                     </a>
                   </div>
                 )}

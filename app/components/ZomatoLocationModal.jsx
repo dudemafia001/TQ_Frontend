@@ -487,15 +487,15 @@ export default function LocationModal({ isOpen, onClose, onLocationSet }) {
 
   // Save address
   const handleSaveAddress = () => {
-    if (selectedAddress && deliveryStatus?.available) {
+    if (selectedAddress) {
       onLocationSet({
         lat: selectedAddress.lat,
         lng: selectedAddress.lng,
         address: selectedAddress.address,
-        isWithinDeliveryRadius: deliveryStatus.available,
-        distance: deliveryStatus.distance,
-        duration: deliveryStatus.duration,
-        durationMinutes: deliveryStatus.durationMinutes,
+        isWithinDeliveryRadius: true, // Always true since we removed delivery check
+        distance: deliveryStatus?.distance,
+        duration: deliveryStatus?.duration,
+        durationMinutes: deliveryStatus?.durationMinutes,
         deliveryStatus: deliveryStatus
       });
       onClose();
@@ -711,28 +711,6 @@ export default function LocationModal({ isOpen, onClose, onLocationSet }) {
               <div className="location-icon">📍</div>
               <div className="address-text">{selectedAddress.address}</div>
             </div>
-            
-            {/* Delivery Status */}
-            {deliveryStatus && (
-              <div className={`delivery-status ${
-                deliveryStatus.loading ? 'loading' : 
-                (deliveryStatus.available ? 'available' : 'unavailable')
-              }`}>
-                <div className="status-message">{deliveryStatus.message}</div>
-                {deliveryStatus.available && !deliveryStatus.loading && deliveryStatus.duration && (
-                  <div className="delivery-info-items">
-                    <div className="detail-item">
-                      <span className="detail-icon">📍</span>
-                      <span className="detail-text">Distance: {deliveryStatus.distance} km</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="detail-icon">⏱️</span>
-                      <span className="detail-text">ETA: {deliveryStatus.duration}</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         )}
 
@@ -741,7 +719,7 @@ export default function LocationModal({ isOpen, onClose, onLocationSet }) {
           <button 
             className="save-address-btn"
             onClick={handleSaveAddress}
-            disabled={!selectedAddress || !deliveryStatus?.available}
+            disabled={!selectedAddress}
           >
             Save address
           </button>
