@@ -906,8 +906,7 @@
     font-size: 0.95rem !important;
   }
 
-  /* Hide address, delivery time, and payment sections on mobile - use fixed bottom instead */
-  .checkout-left .section:has(.address-content),
+  /* Hide delivery time and payment sections on mobile - use fixed bottom instead */
   .checkout-left .section:has(.delivery-info),
   .checkout-left .section:has(.payment-content) {
     display: none !important;
