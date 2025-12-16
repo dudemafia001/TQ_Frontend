@@ -73,6 +73,7 @@ export default function Header() {
         {/* Desktop Navigation */}
         <nav className="header-nav desktop-nav">
           <Link href="/" className="nav-item">Menu</Link>
+          <Link href="/healthy" className="nav-item">Healthy</Link>
           <Link href="/about" className="nav-item">About Us</Link>
           <Link href="/services" className="nav-item">Service</Link>
           <Link href="/contact" className="nav-item">Contact</Link>
@@ -196,6 +197,9 @@ export default function Header() {
                 <Link href="/" className="mobile-nav-item" onClick={closeMobileMenu}>
                   Menu
                 </Link>
+                <Link href="/healthy" className="mobile-nav-item" onClick={closeMobileMenu}>
+                  Healthy
+                </Link>
                 <Link href="/about" className="mobile-nav-item" onClick={closeMobileMenu}>
                   About Us
                 </Link>
@@ -221,6 +225,15 @@ export default function Header() {
                 <polyline points="9 22 9 12 15 12 15 22"></polyline>
               </svg>
               <span>Home</span>
+            </Link>
+            <Link href="/healthy" className={`bottom-nav-item ${pathname === '/healthy' ? 'active' : ''}`}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 2a10 10 0 0 1 10 10 4 4 0 0 1-4 4h-1.5a2.5 2.5 0 1 0 0 5H12a10 10 0 0 1 0-20z"></path>
+                <circle cx="7" cy="10" r="1"></circle>
+                <circle cx="12" cy="8" r="1"></circle>
+                <circle cx="16" cy="10" r="1"></circle>
+              </svg>
+              <span>Healthy</span>
             </Link>
             <Link href="/services" className={`bottom-nav-item ${pathname === '/services' ? 'active' : ''}`}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -249,7 +262,7 @@ export default function Header() {
           </nav>
 
           {/* Floating Cart Button - Mobile Only */}
-          {pathname === '/' ? (
+          {(pathname === '/' || pathname === '/healthy') ? (
             <button 
               className="floating-cart-btn"
               data-bs-toggle="modal"

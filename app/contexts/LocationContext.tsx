@@ -38,14 +38,20 @@ export function LocationProvider({ children }: { children: ReactNode }) {
         try {
           const locationData = JSON.parse(savedLocation);
           // Check if location is not too old (24 hours)
-          const isRecent = (Date.now() - locationData.timestamp) < 24 * 60 * 60 * 1000;
-          if (isRecent) {
+          const isRecent = locationData.timestamp && (Date.now() - locationData.timestamp) < 24 * 60 * 60 * 1000;
+          if (isRecent || !locationData.timestamp) {
             setUserLocationState(locationData);
-            // Default to true if isWithinDeliveryRadius is not set
-            setDeliveryAvailableState(locationData.isWithinDeliveryRadius !== false ? true : false);
+            // Set delivery status from saved data
+            if (typeof locationData.isWithinDeliveryRadius === 'boolean') {
+              setDeliveryAvailableState(locationData.isWithinDeliveryRadius);
+            }
+          } else {
+            // Location is too old, clear it
+            localStorage.removeItem('userLocation');
           }
         } catch (error) {
           console.error("Error parsing saved location:", error);
+          localStorage.removeItem('userLocation');
         }
       }
     }

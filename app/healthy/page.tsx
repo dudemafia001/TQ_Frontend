@@ -2,21 +2,20 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import "bootstrap/dist/css/bootstrap.min.css";
-import "./menu.css";
+import "../menu.css";
 import Image from "next/image";
-import { useCart } from "./contexts/CartContext";
-import { useAuth } from "./contexts/AuthContext";
-import config, { buildApiUrl } from "../config";
-import { useLocation } from "./contexts/LocationContext";
-import ZomatoLocationModal from "./components/ZomatoLocationModal";
-import "./components/ZomatoLocationModal.css";
+import { useCart } from "../contexts/CartContext";
+import { useAuth } from "../contexts/AuthContext";
+import config, { buildApiUrl } from "../../config";
+import { useLocation } from "../contexts/LocationContext";
+import ZomatoLocationModal from "../components/ZomatoLocationModal";
+import "../components/ZomatoLocationModal.css";
 
-export default function Home() {
+export default function HealthyMenu() {
   const router = useRouter();
   const pathname = usePathname();
   const [products, setProducts] = useState<any[]>([]);
   const [allProducts, setAllProducts] = useState<any[]>([]); // Store all products for cart display
-  const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedVariants, setSelectedVariants] = useState<{[key: string]: string}>({});
   const [showLocationPrompt, setShowLocationPrompt] = useState(false);
 
@@ -37,18 +36,18 @@ export default function Home() {
       })
       .catch((err) => console.error("❌ Bootstrap JS failed", err));
 
+    // Fetch only healthy category products
     fetch(buildApiUrl(config.api.endpoints.products))
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
           // Store all products for cart display
           setAllProducts(data);
-          // Filter out healthy items from main menu
-          const regularProducts = data.filter((p: any) => 
-            p.category.toLowerCase().trim() !== "healthy"
+          // Filter only healthy items for display
+          const healthyProducts = data.filter((p: any) => 
+            p.category.toLowerCase().trim() === "healthy"
           );
-          setProducts(regularProducts);
-          setSelectedCategory(""); // show all by default
+          setProducts(healthyProducts);
         }
       })
       .catch((err) => console.error("Fetch error:", err));
@@ -75,16 +74,6 @@ export default function Home() {
     };
   }, [userLocation]);
 
-  const categories = [...new Set(products.map((p: any) => p.category.trim()))];
-
-  const filteredProducts = selectedCategory
-    ? products.filter(
-        (p: any) =>
-          p.category.toLowerCase().trim() ===
-          selectedCategory.toLowerCase().trim()
-      )
-    : products;
-
   // Helper function to get quantity for a specific product+variant
   const getItemQuantity = (productId: string, variant: string) => {
     const key = `${productId}_${variant}`;
@@ -110,16 +99,14 @@ export default function Home() {
 
   const decreaseQty = (id: string, variant: string) => {
     const key = `${id}_${variant}`;
-    const currentQty = getItemQuantity(id, variant);
-    
-    if (currentQty <= 1) {
+    const qty = getItemQuantity(id, variant);
+    if (qty === 1) {
       removeFromCart(key);
     } else {
-      updateQuantity(key, currentQty - 1);
+      updateQuantity(key, qty - 1);
     }
   };
 
-  // Handle change location
   const handleChangeLocation = () => {
     clearLocation();
     setShowLocationPrompt(true);
@@ -131,10 +118,9 @@ export default function Home() {
         {/* Hero Section */}
         <section className="hero-section">
           <div className="hero-content">
-            <h1 className="hero-title">Our Premium Menu</h1>
+            <h1 className="hero-title">🥗 Healthy Menu</h1>
             <p className="hero-subtitle">
-              Discover our range of handcrafted culinary delights made with natural 
-              ingredients and traditional recipes
+              Nutritious and delicious options for a healthier you
             </p>
           </div>
         </section>
@@ -172,59 +158,22 @@ export default function Home() {
         )}
 
         <div className="main-container">
-          {/* Category Filter */}
-          <div className="filter-section">
+          {/* Page Title - Removed since we have hero section */}
+          <div className="filter-section" style={{ paddingTop: '20px' }}>
             <div className="filter-container">
-              {/* Desktop & Tablet: Horizontal Pills */}
-              <div className="category-pills d-none d-md-flex">
-                <button
-                  onClick={() => setSelectedCategory("")}
-                  className={`filter-pill ${
-                    selectedCategory === "" ? "active" : ""
-                  }`}
-                >
-                  All Items
-                </button>
-                {categories.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`filter-pill ${
-                      selectedCategory === cat ? "active" : ""
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
-
-              {/* Mobile: Dropdown */}
-              <div className="d-md-none">
-                <select
-                  className="mobile-filter-select"
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                >
-                  <option value="">All Items</option>
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* Content removed - no category filter needed for healthy items */}
             </div>
           </div>
 
           {/* Products Grid */}
           <div className="products-section">
-            {filteredProducts.length === 0 ? (
+            {products.length === 0 ? (
               <div className="empty-state">
-                <p>No items found in this category.</p>
+                <p>No healthy items available at the moment.</p>
               </div>
             ) : (
               <div className="products-grid">
-                {filteredProducts.map((item: any) => {
+                {products.map((item: any) => {
                   const selectedVariant =
                     selectedVariants[item._id] || item.variants[0].type;
                   const selectedPrice = item.variants.find(
@@ -238,8 +187,8 @@ export default function Home() {
                       <div className="item-content">
                         <div className="item-info">
                           <div className="veg-indicator">
-                            <div className={`veg-icon ${item.category.toLowerCase().includes('chicken') || item.category.toLowerCase().includes('mutton') || item.category.toLowerCase().includes('egg') ? 'non-veg' : 'veg'}`}>
-                              {item.category.toLowerCase().includes('chicken') || item.category.toLowerCase().includes('mutton') || item.category.toLowerCase().includes('egg') ? '🔺' : '🟢'}
+                            <div className="veg-icon veg">
+                              🟢
                             </div>
                           </div>
                           
@@ -284,7 +233,7 @@ export default function Home() {
                               />
                             ) : (
                               <div className="placeholder-image">
-                                <span>🍛</span>
+                                <span>🥗</span>
                                 <small>No Image</small>
                               </div>
                             )}
@@ -333,8 +282,7 @@ export default function Home() {
             )}
           </div>
         </div>
-
-        </div>
+      </div>
 
       {/* Cart Modal (outside menu-page) */}
       <div
@@ -462,7 +410,7 @@ export default function Home() {
 
       {/* Zomato-style Location Modal */}
       <ZomatoLocationModal 
-        isOpen={showLocationPrompt && pathname === '/'}
+        isOpen={showLocationPrompt && pathname === '/healthy'}
         onClose={() => setShowLocationPrompt(false)}
         onLocationSet={(locationData: any) => {
           setUserLocation({
