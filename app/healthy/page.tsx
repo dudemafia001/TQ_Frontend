@@ -163,13 +163,6 @@ export default function HealthyMenu() {
         )}
 
         <div className="main-container">
-          {/* Page Title - Removed since we have hero section */}
-          <div className="filter-section" style={{ paddingTop: '20px' }}>
-            <div className="filter-container">
-              {/* Content removed - no category filter needed for healthy items */}
-            </div>
-          </div>
-
           {/* Products Grid */}
           <div className="products-section">
             {products.length === 0 ? (
