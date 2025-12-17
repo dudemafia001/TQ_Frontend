@@ -41,13 +41,18 @@ export default function HealthyMenu() {
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
+          console.log("Fetched all products:", data.length);
           // Store all products for cart display
           setAllProducts(data);
-          // Filter only healthy items for display
-          const healthyProducts = data.filter((p: any) => 
-            p.category.toLowerCase().trim() === "healthy"
-          );
+          // Filter only healthy items for display (case-insensitive)
+          const healthyProducts = data.filter((p: any) => {
+            const category = p.category?.toLowerCase().trim() || "";
+            return category === "healthy";
+          });
+          console.log("Healthy products after filter:", healthyProducts.length);
           setProducts(healthyProducts);
+        } else {
+          console.error("Invalid data format:", data);
         }
       })
       .catch((err) => console.error("Fetch error:", err));

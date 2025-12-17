@@ -41,14 +41,19 @@ export default function Home() {
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
+          console.log("Fetched products:", data.length);
           // Store all products for cart display
           setAllProducts(data);
-          // Filter out healthy items from main menu
-          const regularProducts = data.filter((p: any) => 
-            p.category.toLowerCase().trim() !== "healthy"
-          );
+          // Filter out healthy items from main menu (case-insensitive)
+          const regularProducts = data.filter((p: any) => {
+            const category = p.category?.toLowerCase().trim() || "";
+            return category !== "healthy";
+          });
+          console.log("Regular products after filter:", regularProducts.length);
           setProducts(regularProducts);
           setSelectedCategory(""); // show all by default
+        } else {
+          console.error("Invalid data format:", data);
         }
       })
       .catch((err) => console.error("Fetch error:", err));
