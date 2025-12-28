@@ -43,6 +43,19 @@ export default function AdminDashboard() {
   const [siteStatus, setSiteStatus] = useState({ isOpen: true, closedMessage: '' });
   const [tempMessage, setTempMessage] = useState('');
 
+  // Products section state
+  const [products, setProducts] = useState([]);
+  const [productsLoading, setProductsLoading] = useState(false);
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [productForm, setProductForm] = useState({
+    name: '',
+    category: '',
+    description: '',
+    variants: [{ type: 'Half', price: '' }, { type: 'Full', price: '' }],
+    inStock: true
+  });
+
   useEffect(() => {
     if (!loading && !isAuthenticated) {
       router.push('/admin');
@@ -63,6 +76,14 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (isAuthenticated && activeSection === 'queries') {
       fetchQueries();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, activeSection]);
+
+  // Load products when products section is active
+  useEffect(() => {
+    if (isAuthenticated && activeSection === 'products') {
+      fetchProducts();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, activeSection]);
@@ -267,6 +288,133 @@ export default function AdminDashboard() {
     setSelectedQuery(null);
   };
 
+  const fetchProducts = async () => {
+    try {
+      setProductsLoading(true);
+      const res = await fetch(buildApiUrl(config.api.endpoints.products));
+      const data = await res.json();
+      setProducts(data);
+    } catch (err) {
+      console.error('Error fetching products:', err);
+    } finally {
+      setProductsLoading(false);
+    }
+  };
+
+  const handleProductFormChange = (field, value) => {
+    setProductForm({ ...productForm, [field]: value });
+  };
+
+  const handleVariantChange = (index, field, value) => {
+    const updatedVariants = [...productForm.variants];
+    updatedVariants[index][field] = value;
+    setProductForm({ ...productForm, variants: updatedVariants });
+  };
+
+  const addVariant = () => {
+    setProductForm({
+      ...productForm,
+      variants: [...productForm.variants, { type: '', price: '' }]
+    });
+  };
+
+  const removeVariant = (index) => {
+    const updatedVariants = productForm.variants.filter((_, i) => i !== index);
+    setProductForm({ ...productForm, variants: updatedVariants });
+  };
+
+  const openProductModal = (product = null) => {
+    if (product) {
+      setEditingProduct(product);
+      setProductForm({
+        name: product.name,
+        category: product.category,
+        description: product.description || '',
+        variants: product.variants.length > 0 ? product.variants : [{ type: 'Half', price: '' }, { type: 'Full', price: '' }],
+        inStock: product.inStock
+      });
+    } else {
+      setEditingProduct(null);
+      setProductForm({
+        name: '',
+        category: '',
+        description: '',
+        variants: [{ type: 'Half', price: '' }, { type: 'Full', price: '' }],
+        inStock: true
+      });
+    }
+    setIsProductModalOpen(true);
+  };
+
+  const closeProductModal = () => {
+    setIsProductModalOpen(false);
+    setEditingProduct(null);
+  };
+
+  const handleSaveProduct = async () => {
+    try {
+      // Validate form
+      if (!productForm.name || !productForm.category) {
+        alert('Please fill in all required fields');
+        return;
+      }
+
+      // Filter out empty variants
+      const validVariants = productForm.variants.filter(v => v.type && v.price);
+
+      const productData = {
+        ...productForm,
+        variants: validVariants
+      };
+
+      const url = editingProduct 
+        ? buildApiUrl(`${config.api.endpoints.products}/${editingProduct._id}`)
+        : buildApiUrl(config.api.endpoints.products);
+      
+      const method = editingProduct ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(productData)
+      });
+
+      if (res.ok) {
+        alert(`Product ${editingProduct ? 'updated' : 'created'} successfully!`);
+        closeProductModal();
+        fetchProducts();
+      } else {
+        const error = await res.json();
+        alert(`Error: ${error.message}`);
+      }
+    } catch (err) {
+      console.error('Error saving product:', err);
+      alert('Failed to save product');
+    }
+  };
+
+  const handleDeleteProduct = async (productId) => {
+    if (!confirm('Are you sure you want to delete this product?')) {
+      return;
+    }
+
+    try {
+      const res = await fetch(buildApiUrl(`${config.api.endpoints.products}/${productId}`), {
+        method: 'DELETE'
+      });
+
+      if (res.ok) {
+        alert('Product deleted successfully!');
+        fetchProducts();
+      } else {
+        alert('Failed to delete product');
+      }
+    } catch (err) {
+      console.error('Error deleting product:', err);
+      alert('Failed to delete product');
+    }
+  };
+
   const fetchSiteStatus = async () => {
     try {
       const res = await fetch(buildApiUrl(config.api.endpoints.site.status));
@@ -430,6 +578,16 @@ export default function AdminDashboard() {
           >
             <span className="nav-icon">💬</span>
             Queries
+          </div>
+          <div 
+            className={`nav-item ${activeSection === 'products' ? 'active' : ''}`}
+            onClick={() => {
+              setActiveSection('products');
+              closeMobileMenu();
+            }}
+          >
+            <span className="nav-icon">🍽️</span>
+            Products
           </div>
           <div 
             className={`nav-item ${activeSection === 'siteStatus' ? 'active' : ''}`}
@@ -789,6 +947,134 @@ export default function AdminDashboard() {
           </div>
         )}
 
+        {activeSection === 'products' && (
+          <div className="content-section">
+            <div className="section-header">
+              <h2 className="section-title">Product Management</h2>
+              <button 
+                className="primary-button"
+                onClick={() => openProductModal()}
+                style={{ 
+                  padding: '0.75rem 1.5rem',
+                  backgroundColor: '#48bb78',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '600'
+                }}
+              >
+                + Add New Product
+              </button>
+            </div>
+
+            {productsLoading ? (
+              <div style={{ padding: '2rem', textAlign: 'center' }}>Loading products...</div>
+            ) : products.length === 0 ? (
+              <div style={{ padding: '2rem', textAlign: 'center', color: '#718096' }}>
+                No products found. Add your first product!
+              </div>
+            ) : (
+              <div className="table-container">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Product Name</th>
+                      <th>Category</th>
+                      <th>Variants</th>
+                      <th>Stock Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {products.map((product) => (
+                      <tr key={product._id}>
+                        <td>
+                          <div>
+                            <div style={{ fontWeight: '600' }}>{product.name}</div>
+                            {product.description && (
+                              <div style={{ fontSize: '0.875rem', color: '#718096' }}>
+                                {product.description}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td>
+                          <span style={{ 
+                            padding: '0.25rem 0.75rem',
+                            backgroundColor: '#e2e8f0',
+                            borderRadius: '12px',
+                            fontSize: '0.875rem'
+                          }}>
+                            {product.category}
+                          </span>
+                        </td>
+                        <td>
+                          <div style={{ fontSize: '0.875rem' }}>
+                            {product.variants.length > 0 ? (
+                              product.variants.map((v, i) => (
+                                <div key={i}>
+                                  {v.type}: ₹{v.price}
+                                </div>
+                              ))
+                            ) : (
+                              <span style={{ color: '#718096' }}>No variants</span>
+                            )}
+                          </div>
+                        </td>
+                        <td>
+                          <span style={{
+                            padding: '0.25rem 0.75rem',
+                            backgroundColor: product.inStock ? '#c6f6d5' : '#fed7d7',
+                            color: product.inStock ? '#22543d' : '#742a2a',
+                            borderRadius: '12px',
+                            fontSize: '0.875rem',
+                            fontWeight: '600'
+                          }}>
+                            {product.inStock ? 'In Stock' : 'Out of Stock'}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="action-buttons" style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button 
+                              className="action-button view-button"
+                              onClick={() => openProductModal(product)}
+                              style={{
+                                padding: '0.5rem 1rem',
+                                backgroundColor: '#4299e1',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              Edit
+                            </button>
+                            <button 
+                              className="action-button delete-button"
+                              onClick={() => handleDeleteProduct(product._id)}
+                              style={{
+                                padding: '0.5rem 1rem',
+                                backgroundColor: '#e53e3e',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
         {activeSection === 'siteStatus' && (
           <div className="content-section">
             <div className="section-header">
@@ -932,6 +1218,192 @@ export default function AdminDashboard() {
                     onClick={() => updateQueryStatus(selectedQuery._id, selectedQuery.status, selectedQuery.adminNotes)}
                   >
                     Save Notes
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Product Modal */}
+      {isProductModalOpen && (
+        <div className="modal-overlay" onClick={closeProductModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px' }}>
+            <div className="modal-header">
+              <h2>{editingProduct ? 'Edit Product' : 'Add New Product'}</h2>
+              <button className="modal-close" onClick={closeProductModal}>×</button>
+            </div>
+            <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+                    Product Name <span style={{ color: 'red' }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={productForm.name}
+                    onChange={(e) => handleProductFormChange('name', e.target.value)}
+                    placeholder="e.g., Butter Chicken"
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '6px',
+                      fontSize: '1rem'
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+                    Category <span style={{ color: 'red' }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={productForm.category}
+                    onChange={(e) => handleProductFormChange('category', e.target.value)}
+                    placeholder="e.g., Main Course, Starters, Desserts"
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '6px',
+                      fontSize: '1rem'
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+                    Description
+                  </label>
+                  <textarea
+                    value={productForm.description}
+                    onChange={(e) => handleProductFormChange('description', e.target.value)}
+                    placeholder="Describe your dish..."
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '6px',
+                      minHeight: '80px',
+                      fontSize: '1rem',
+                      fontFamily: 'inherit'
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+                    Variants (Sizes & Prices)
+                  </label>
+                  {productForm.variants.map((variant, index) => (
+                    <div key={index} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                      <input
+                        type="text"
+                        value={variant.type}
+                        onChange={(e) => handleVariantChange(index, 'type', e.target.value)}
+                        placeholder="Type (e.g., Half, Full)"
+                        style={{
+                          flex: 1,
+                          padding: '0.75rem',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '6px',
+                          fontSize: '1rem'
+                        }}
+                      />
+                      <input
+                        type="number"
+                        value={variant.price}
+                        onChange={(e) => handleVariantChange(index, 'price', e.target.value)}
+                        placeholder="Price"
+                        style={{
+                          flex: 1,
+                          padding: '0.75rem',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '6px',
+                          fontSize: '1rem'
+                        }}
+                      />
+                      {productForm.variants.length > 1 && (
+                        <button
+                          onClick={() => removeVariant(index)}
+                          style={{
+                            padding: '0.75rem',
+                            backgroundColor: '#e53e3e',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    onClick={addVariant}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      backgroundColor: '#4299e1',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                      marginTop: '0.5rem'
+                    }}
+                  >
+                    + Add Variant
+                  </button>
+                </div>
+
+                <div>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={productForm.inStock}
+                      onChange={(e) => handleProductFormChange('inStock', e.target.checked)}
+                      style={{ width: '18px', height: '18px' }}
+                    />
+                    <span style={{ fontWeight: '600' }}>In Stock</span>
+                  </label>
+                </div>
+
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                  <button
+                    onClick={handleSaveProduct}
+                    style={{
+                      flex: 1,
+                      padding: '0.75rem',
+                      backgroundColor: '#48bb78',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      fontSize: '1rem'
+                    }}
+                  >
+                    {editingProduct ? 'Update Product' : 'Create Product'}
+                  </button>
+                  <button
+                    onClick={closeProductModal}
+                    style={{
+                      flex: 1,
+                      padding: '0.75rem',
+                      backgroundColor: '#cbd5e0',
+                      color: '#2d3748',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      fontSize: '1rem'
+                    }}
+                  >
+                    Cancel
                   </button>
                 </div>
               </div>
