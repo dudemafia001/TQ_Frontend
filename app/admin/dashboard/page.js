@@ -52,6 +52,7 @@ export default function AdminDashboard() {
     name: '',
     category: '',
     description: '',
+    imageUrl: '',
     variants: [{ type: 'Half', price: '' }, { type: 'Full', price: '' }],
     inStock: true
   });
@@ -330,6 +331,7 @@ export default function AdminDashboard() {
         name: product.name,
         category: product.category,
         description: product.description || '',
+        imageUrl: product.imageUrl || '',
         variants: product.variants.length > 0 ? product.variants : [{ type: 'Half', price: '' }, { type: 'Full', price: '' }],
         inStock: product.inStock
       });
@@ -339,6 +341,7 @@ export default function AdminDashboard() {
         name: '',
         category: '',
         description: '',
+        imageUrl: '',
         variants: [{ type: 'Half', price: '' }, { type: 'Full', price: '' }],
         inStock: true
       });
@@ -367,6 +370,8 @@ export default function AdminDashboard() {
         variants: validVariants
       };
 
+      console.log('Sending product data:', productData); // Debug log
+
       const url = editingProduct 
         ? buildApiUrl(`${config.api.endpoints.products}/${editingProduct._id}`)
         : buildApiUrl(config.api.endpoints.products);
@@ -380,6 +385,8 @@ export default function AdminDashboard() {
       });
 
       if (res.ok) {
+        const savedProduct = await res.json();
+        console.log('Saved product:', savedProduct); // Debug log
         alert(`Product ${editingProduct ? 'updated' : 'created'} successfully!`);
         closeProductModal();
         fetchProducts();
@@ -997,6 +1004,11 @@ export default function AdminDashboard() {
                                 {product.description}
                               </div>
                             )}
+                            {product.imageUrl && (
+                              <div style={{ fontSize: '0.75rem', color: '#4299e1', marginTop: '0.25rem' }}>
+                                🖼️ Image: {product.imageUrl.substring(0, 40)}...
+                              </div>
+                            )}
                           </div>
                         </td>
                         <td>
@@ -1292,6 +1304,28 @@ export default function AdminDashboard() {
                       fontFamily: 'inherit'
                     }}
                   />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+                    Image URL
+                  </label>
+                  <input
+                    type="text"
+                    value={productForm.imageUrl}
+                    onChange={(e) => handleProductFormChange('imageUrl', e.target.value)}
+                    placeholder="https://drive.google.com/..."
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '6px',
+                      fontSize: '1rem'
+                    }}
+                  />
+                  <small style={{ color: '#718096', fontSize: '0.875rem' }}>
+                    Use direct image URL or Google Drive share link
+                  </small>
                 </div>
 
                 <div>

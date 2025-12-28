@@ -11,6 +11,7 @@ import { useLocation } from "../contexts/LocationContext";
 import ZomatoLocationModal from "../components/ZomatoLocationModal";
 import "../components/ZomatoLocationModal.css";
 import ImageSlider from "../components/ImageSlider";
+import { convertGoogleDriveUrl } from "../../utils/imageHelper";
 
 export default function HealthyMenu() {
   const router = useRouter();
@@ -228,23 +229,28 @@ export default function HealthyMenu() {
 
                         <div className="item-image-section">
                           <div className="item-image">
-                            {item.image ? (
-                              <Image 
-                                src={item.image} 
+                            {item.imageUrl ? (
+                              <img 
+                                src={convertGoogleDriveUrl(item.imageUrl)} 
                                 alt={item.name}
                                 width={120}
                                 height={120}
                                 style={{ objectFit: 'cover', borderRadius: '8px' }}
                                 onError={(e) => {
-                                  (e.target as HTMLImageElement).style.display = 'none';
+                                  console.log('Image load error for:', item.name, item.imageUrl);
+                                  e.currentTarget.style.display = 'none';
+                                  const placeholder = e.currentTarget.nextElementSibling as HTMLElement;
+                                  if (placeholder) placeholder.classList.remove('d-none');
                                 }}
+                                onLoad={() => console.log('Image loaded:', item.name)}
                               />
-                            ) : (
+                            ) : null}
+                            <div className={item.imageUrl ? 'd-none' : ''}>
                               <div className="placeholder-image">
                                 <span>🥗</span>
                                 <small>No Image</small>
                               </div>
-                            )}
+                            </div>
                           </div>
                           
                           <div className="item-actions">
