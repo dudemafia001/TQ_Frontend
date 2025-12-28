@@ -53,7 +53,13 @@ const config = {
       },
       
       // Contact endpoints
-      contact: '/api/contact'
+      contact: '/api/contact',
+      
+      // Site status endpoints
+      site: {
+        status: '/api/site/status',
+        update: '/api/site/update'
+      }
     }
   },
 

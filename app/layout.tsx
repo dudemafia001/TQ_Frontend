@@ -8,6 +8,7 @@ import { CartProvider } from "./contexts/CartContext";
 import { LocationProvider } from "./contexts/LocationContext";
 import { AdminProvider } from "./contexts/AdminContext";
 import ConditionalHeader from "./components/ConditionalHeader";
+import SiteClosedModal from "./components/SiteClosedModal";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -45,6 +46,7 @@ export default function RootLayout({
             <CartProvider>
               <LocationProvider>
                 <ConditionalHeader />
+                <SiteClosedModal />
                 {children}
               </LocationProvider>
             </CartProvider>

@@ -38,6 +38,10 @@ export default function AdminDashboard() {
   });
   const [selectedQuery, setSelectedQuery] = useState(null);
   const [isQueryModalOpen, setIsQueryModalOpen] = useState(false);
+  
+  // Site status state
+  const [siteStatus, setSiteStatus] = useState({ isOpen: true, closedMessage: '' });
+  const [tempMessage, setTempMessage] = useState('');
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -50,6 +54,7 @@ export default function AdminDashboard() {
     if (isAuthenticated) {
       fetchAllOrdersInitial();
       fetchAnalytics();
+      fetchSiteStatus();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
@@ -262,6 +267,36 @@ export default function AdminDashboard() {
     setSelectedQuery(null);
   };
 
+  const fetchSiteStatus = async () => {
+    try {
+      const res = await fetch(buildApiUrl(config.api.endpoints.site.status));
+      const data = await res.json();
+      if (data.success) {
+        setSiteStatus(data.data);
+        setTempMessage(data.data.closedMessage);
+      }
+    } catch (err) {
+      console.error('Error fetching site status:', err);
+    }
+  };
+
+  const updateSiteStatus = async (isOpen) => {
+    try {
+      const res = await fetch(buildApiUrl(config.api.endpoints.site.update), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isOpen, closedMessage: tempMessage })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSiteStatus(data.data);
+        alert(data.message);
+      }
+    } catch (err) {
+      console.error('Error updating site status:', err);
+    }
+  };
+
   const formatQuerySubject = (subject) => {
     const subjects = {
       general: 'General Inquiry',
@@ -395,6 +430,16 @@ export default function AdminDashboard() {
           >
             <span className="nav-icon">💬</span>
             Queries
+          </div>
+          <div 
+            className={`nav-item ${activeSection === 'siteStatus' ? 'active' : ''}`}
+            onClick={() => {
+              setActiveSection('siteStatus');
+              closeMobileMenu();
+            }}
+          >
+            <span className="nav-icon">{siteStatus.isOpen ? '✅' : '🚫'}</span>
+            Site Status
           </div>
         </nav>
       </div>
@@ -741,6 +786,76 @@ export default function AdminDashboard() {
                 </table>
               </div>
             )}
+          </div>
+        )}
+
+        {activeSection === 'siteStatus' && (
+          <div className="content-section">
+            <div className="section-header">
+              <h2 className="section-title">Site Status Control</h2>
+            </div>
+            <div style={{ padding: '2rem' }}>
+              <div style={{ background: 'white', padding: '2rem', borderRadius: '8px', maxWidth: '600px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+                  <div style={{ fontSize: '2rem' }}>{siteStatus.isOpen ? '✅' : '🚫'}</div>
+                  <h3 style={{ margin: 0 }}>Status: {siteStatus.isOpen ? 'Open' : 'Closed'}</h3>
+                </div>
+                
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+                    Message when closed:
+                  </label>
+                  <textarea
+                    value={tempMessage}
+                    onChange={(e) => setTempMessage(e.target.value)}
+                    placeholder="Enter message to show when site is closed..."
+                    style={{ 
+                      width: '100%', 
+                      padding: '0.75rem', 
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '6px',
+                      minHeight: '100px',
+                      fontFamily: 'inherit'
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <button
+                    onClick={() => updateSiteStatus(false)}
+                    disabled={!siteStatus.isOpen}
+                    style={{
+                      flex: 1,
+                      padding: '0.75rem',
+                      backgroundColor: !siteStatus.isOpen ? '#cbd5e0' : '#e53e3e',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontWeight: '600',
+                      cursor: siteStatus.isOpen ? 'pointer' : 'not-allowed'
+                    }}
+                  >
+                    � Close Site
+                  </button>
+                  <button
+                    onClick={() => updateSiteStatus(true)}
+                    disabled={siteStatus.isOpen}
+                    style={{
+                      flex: 1,
+                      padding: '0.75rem',
+                      backgroundColor: siteStatus.isOpen ? '#cbd5e0' : '#48bb78',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontWeight: '600',
+                      cursor: !siteStatus.isOpen ? 'pointer' : 'not-allowed'
+                    }}
+                  >
+                    ✅ Open Site
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
