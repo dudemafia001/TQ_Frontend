@@ -231,6 +231,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   color: #4a5568;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .qty-btn:hover {
@@ -404,6 +405,7 @@
   font-weight: 600;
   color: #B8860B;
   transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .qty-btn:hover {
@@ -416,6 +418,17 @@
 
 .qty-btn.plus {
   border-left: 1px solid #e0e0e0;
+  background: linear-gradient(135deg, #B8860B, #DAA520) !important;
+  color: #fff !important;
+}
+
+.qty-btn.plus:hover {
+  background: linear-gradient(135deg, #9a7109, #B8860B) !important;
+}
+
+.qty-btn.plus:active {
+  background: linear-gradient(135deg, #9a7109, #B8860B) !important;
+  transform: scale(0.95);
 }
 
 .qty-display {
@@ -435,6 +448,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   font-size: 14px;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .add-btn:hover {
@@ -672,10 +686,22 @@
 /* Focus states for accessibility */
 .filter-pill:focus,
 .add-to-cart-btn:focus,
-.qty-btn:focus,
 .icon-btn:focus {
   outline: 2px solid #B8860B;
   outline-offset: 2px;
+}
+
+.qty-btn:focus {
+  outline: none;
+}
+
+.qty-btn:active {
+  transform: scale(0.95);
+}
+
+.qty-btn.plus:active {
+  transform: scale(0.95);
+  background: linear-gradient(135deg, #9a7109, #B8860B);
 }
 
 /* Loading states */

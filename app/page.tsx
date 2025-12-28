@@ -300,18 +300,20 @@ export default function Home() {
                               <div className="quantity-controls">
                                 <button
                                   className="qty-btn minus"
-                                  onClick={() =>
-                                    decreaseQty(item._id, selectedVariant)
-                                  }
+                                  onClick={(e) => {
+                                    decreaseQty(item._id, selectedVariant);
+                                    e.currentTarget.blur();
+                                  }}
                                 >
                                   −
                                 </button>
                                 <span className="qty-display">{qty}</span>
                                 <button
                                   className="qty-btn plus"
-                                  onClick={() =>
-                                    increaseQty(item._id, selectedVariant)
-                                  }
+                                  onClick={(e) => {
+                                    increaseQty(item._id, selectedVariant);
+                                    e.currentTarget.blur();
+                                  }}
                                 >
                                   +
                                 </button>
@@ -319,9 +321,10 @@ export default function Home() {
                             ) : (
                               <button
                                 className="add-btn"
-                                onClick={() =>
-                                  addToCart(item._id, selectedVariant)
-                                }
+                                onClick={(e) => {
+                                  addToCart(item._id, selectedVariant);
+                                  e.currentTarget.blur();
+                                }}
                               >
                                 Add
                               </button>
