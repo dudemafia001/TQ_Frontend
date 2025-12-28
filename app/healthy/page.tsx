@@ -10,6 +10,7 @@ import config, { buildApiUrl } from "../../config";
 import { useLocation } from "../contexts/LocationContext";
 import ZomatoLocationModal from "../components/ZomatoLocationModal";
 import "../components/ZomatoLocationModal.css";
+import ImageSlider from "../components/ImageSlider";
 
 export default function HealthyMenu() {
   const router = useRouter();
@@ -22,6 +23,15 @@ export default function HealthyMenu() {
   const { addToCart: addToCartContext, updateQuantity, removeFromCart, cartItems, totalItems: cartTotalItems, subtotal } = useCart();
   const { userLocation, deliveryAvailable, setUserLocation, setDeliveryAvailable, clearLocation } = useLocation();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
+
+  // Healthy slider images
+  const sliderImages = [
+    "/slider-healthy/healthy-1.JPG",
+    "/slider-healthy/healthy-2.JPG",
+    "/slider-healthy/healthy-3.JPG",
+    "/slider-healthy/healthy-4.JPG",
+    "/slider-healthy/healthy-5.JPG"
+  ];
 
   useEffect(() => {
     // ✅ Load Bootstrap only on client
@@ -120,15 +130,10 @@ export default function HealthyMenu() {
   return (
     <>
       <div className="menu-page">
-        {/* Hero Section */}
-        <section className="hero-section">
-          <div className="hero-content">
-            <h1 className="hero-title">🥗 Healthy Menu</h1>
-            <p className="hero-subtitle">
-              Nutritious and delicious options for a healthier you
-            </p>
-          </div>
-        </section>
+        {/* Image Slider replacing hero section */}
+        <div style={{ marginTop: '0px' }}>
+          <ImageSlider images={sliderImages} autoPlay={true} interval={4000} />
+        </div>
 
         {/* Delivery Status Bar */}
         {userLocation && (
@@ -172,6 +177,11 @@ export default function HealthyMenu() {
             ) : (
               <div className="products-grid">
                 {products.map((item: any) => {
+                  // Safety check for variants
+                  if (!item.variants || item.variants.length === 0) {
+                    return null;
+                  }
+                  
                   const selectedVariant =
                     selectedVariants[item._id] || item.variants[0].type;
                   const selectedPrice = item.variants.find(
