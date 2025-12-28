@@ -27,11 +27,11 @@ export default function HealthyMenu() {
 
   // Healthy slider images
   const sliderImages = [
-    "/slider-healthy/healthy-1.JPG",
-    "/slider-healthy/healthy-2.JPG",
-    "/slider-healthy/healthy-3.JPG",
-    "/slider-healthy/healthy-4.JPG",
-    "/slider-healthy/healthy-5.JPG"
+    "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=1400&h=450&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=1400&h=450&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1547592180-85f173990554?w=1400&h=450&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=1400&h=450&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1511690743698-d9d85f2fbf38?w=1400&h=450&fit=crop&q=80"
   ];
 
   useEffect(() => {
