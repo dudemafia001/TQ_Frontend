@@ -379,9 +379,20 @@ export default function HealthyMenu() {
             {cartTotalItems > 0 && (
               <div className="modal-footer">
                 <h5 className="me-auto">Total: ₹{subtotal.toFixed(2)}</h5>
+                {subtotal < 249 && (
+                  <small style={{ color: '#e53e3e', marginRight: 'auto' }}>
+                    Minimum order: ₹249
+                  </small>
+                )}
                 <button 
                   className="btn btn-success"
                   onClick={() => {
+                    // Check minimum cart value
+                    if (subtotal < 249) {
+                      alert('Minimum order value is ₹249. Please add more items to your cart.');
+                      return;
+                    }
+                    
                     // Check authentication before proceeding to checkout
                     if (authLoading) {
                       // Still loading, don't proceed yet
@@ -415,7 +426,7 @@ export default function HealthyMenu() {
                       router.push('/checkout');
                     }, 150); // Small delay to ensure modal close animation completes
                   }}
-                  disabled={authLoading}
+                  disabled={authLoading || subtotal < 249}
                 >
                   {authLoading ? 'Loading...' : 'Checkout'}
                 </button>

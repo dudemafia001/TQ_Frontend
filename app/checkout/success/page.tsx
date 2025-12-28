@@ -16,32 +16,8 @@ export default function CheckoutSuccessPage() {
   useEffect(() => {
     // Clear cart on successful order
     clearCart();
-    
-    // Fetch the latest order to get estimated delivery time
-    const fetchLatestOrder = async () => {
-      try {
-        const response = await fetch(buildApiUrl(`${config.api.endpoints.orders.user}/${user}`));
-        if (response.ok) {
-          const orders = await response.json();
-          if (orders.length > 0) {
-            // Get the most recent order
-            const mostRecentOrder = orders.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
-            setLatestOrder(mostRecentOrder);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching latest order:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (user) {
-      fetchLatestOrder();
-    } else {
-      setLoading(false);
-    }
-  }, [clearCart, user]);
+    setLoading(false);
+  }, [clearCart]);
 
   return (
     <div className="success-container">
@@ -51,19 +27,6 @@ export default function CheckoutSuccessPage() {
         <p className="success-message">
           Thank you for your order. We&apos;ll prepare your delicious food and deliver it to you soon.
         </p>
-        
-        <div className="success-details">
-          <div className="detail-item">
-            <span className="detail-label">🕒 Estimated Delivery:</span>
-            <span className="detail-value">
-              {loading ? 'Calculating...' : latestOrder?.estimatedDeliveryTime || '45-60 minutes'}
-            </span>
-          </div>
-          <div className="detail-item">
-            <span className="detail-label">📱 Order Updates:</span>
-            <span className="detail-value">You&apos;ll receive SMS updates</span>
-          </div>
-        </div>
 
         <div className="success-actions">
           <button 

@@ -41,9 +41,12 @@ export function LocationProvider({ children }: { children: ReactNode }) {
           const isRecent = locationData.timestamp && (Date.now() - locationData.timestamp) < 24 * 60 * 60 * 1000;
           if (isRecent || !locationData.timestamp) {
             setUserLocationState(locationData);
-            // Set delivery status from saved data
+            // Set delivery status from saved data - default to true if not set
             if (typeof locationData.isWithinDeliveryRadius === 'boolean') {
               setDeliveryAvailableState(locationData.isWithinDeliveryRadius);
+            } else {
+              // If not explicitly set, assume available
+              setDeliveryAvailableState(true);
             }
           } else {
             // Location is too old, clear it
