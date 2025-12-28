@@ -122,7 +122,7 @@ export default function Header() {
 
           {/* Cart Icon - Only render cart button when mounted and check pathname */}
           {isMounted ? (
-            pathname === '/' ? (
+            (pathname === '/' || pathname === '/healthy') ? (
               <button 
                 className="header-icon-btn cart-btn"
                 data-bs-toggle="modal"
