@@ -48,6 +48,7 @@ export default function AdminDashboard() {
   const [productsLoading, setProductsLoading] = useState(false);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [productForm, setProductForm] = useState({
     name: '',
     category: '',
@@ -975,11 +976,59 @@ export default function AdminDashboard() {
               </button>
             </div>
 
+            {/* Category Filter */}
+            <div className="filters-container" style={{ marginBottom: '1.5rem' }}>
+              <div className="filters-grid">
+                <div className="filter-group">
+                  <label className="filter-label">Filter by Category</label>
+                  <select
+                    className="filter-select"
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    style={{
+                      padding: '0.75rem',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '6px',
+                      fontSize: '1rem',
+                      minWidth: '200px'
+                    }}
+                  >
+                    <option value="all">All Categories</option>
+                    {[...new Set(products.map(p => p.category))].sort().map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+                {selectedCategory !== 'all' && (
+                  <div className="filter-group" style={{ display: 'flex', alignItems: 'flex-end' }}>
+                    <button
+                      className="filter-button clear-button"
+                      onClick={() => setSelectedCategory('all')}
+                      style={{
+                        padding: '0.75rem 1.5rem',
+                        backgroundColor: '#e2e8f0',
+                        color: '#2d3748',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontWeight: '600'
+                      }}
+                    >
+                      Clear Filter
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
             {productsLoading ? (
               <div style={{ padding: '2rem', textAlign: 'center' }}>Loading products...</div>
-            ) : products.length === 0 ? (
+            ) : products.filter(p => selectedCategory === 'all' || p.category === selectedCategory).length === 0 ? (
               <div style={{ padding: '2rem', textAlign: 'center', color: '#718096' }}>
-                No products found. Add your first product!
+                {selectedCategory === 'all' 
+                  ? 'No products found. Add your first product!'
+                  : `No products found in "${selectedCategory}" category.`
+                }
               </div>
             ) : (
               <div className="table-container">
@@ -994,7 +1043,9 @@ export default function AdminDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {products.map((product) => (
+                    {products
+                      .filter(p => selectedCategory === 'all' || p.category === selectedCategory)
+                      .map((product) => (
                       <tr key={product._id}>
                         <td>
                           <div>
