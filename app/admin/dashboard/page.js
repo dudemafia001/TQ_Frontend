@@ -40,8 +40,9 @@ export default function AdminDashboard() {
   const [isQueryModalOpen, setIsQueryModalOpen] = useState(false);
   
   // Site status state
-  const [siteStatus, setSiteStatus] = useState({ isOpen: true, closedMessage: '' });
+  const [siteStatus, setSiteStatus] = useState({ isOpen: true, closedMessage: '', reopenTime: null });
   const [tempMessage, setTempMessage] = useState('');
+  const [tempReopenTime, setTempReopenTime] = useState('');
 
   // Products section state
   const [products, setProducts] = useState([]);
@@ -430,6 +431,13 @@ export default function AdminDashboard() {
       if (data.success) {
         setSiteStatus(data.data);
         setTempMessage(data.data.closedMessage);
+        if (data.data.reopenTime) {
+          const date = new Date(data.data.reopenTime);
+          const localDateTime = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+            .toISOString()
+            .slice(0, 16);
+          setTempReopenTime(localDateTime);
+        }
       }
     } catch (err) {
       console.error('Error fetching site status:', err);
@@ -438,10 +446,15 @@ export default function AdminDashboard() {
 
   const updateSiteStatus = async (isOpen) => {
     try {
+      const payload = { 
+        isOpen, 
+        closedMessage: tempMessage,
+        reopenTime: tempReopenTime ? new Date(tempReopenTime).toISOString() : null
+      };
       const res = await fetch(buildApiUrl(config.api.endpoints.site.update), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isOpen, closedMessage: tempMessage })
+        body: JSON.stringify(payload)
       });
       const data = await res.json();
       if (data.success) {
@@ -1167,6 +1180,45 @@ export default function AdminDashboard() {
                       fontFamily: 'inherit'
                     }}
                   />
+                </div>
+
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+                    ⏰ Reopen Date & Time (Optional):
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={tempReopenTime}
+                    onChange={(e) => setTempReopenTime(e.target.value)}
+                    style={{ 
+                      width: '100%', 
+                      padding: '0.75rem', 
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '6px',
+                      fontSize: '1rem',
+                      fontFamily: 'inherit'
+                    }}
+                  />
+                  <small style={{ color: '#718096', fontSize: '0.875rem', marginTop: '0.5rem', display: 'block' }}>
+                    Set when the site will automatically reopen. Leave empty for no timer.
+                  </small>
+                  {tempReopenTime && (
+                    <button
+                      onClick={() => setTempReopenTime('')}
+                      style={{
+                        marginTop: '0.5rem',
+                        padding: '0.5rem 1rem',
+                        backgroundColor: '#e2e8f0',
+                        color: '#2d3748',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem'
+                      }}
+                    >
+                      Clear Timer
+                    </button>
+                  )}
                 </div>
 
                 <div style={{ display: 'flex', gap: '1rem' }}>
