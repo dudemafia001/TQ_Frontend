@@ -102,7 +102,13 @@ export default function CheckoutPage() {
     isWithinOperatingHours: boolean;
     outsideHoursMessage: string;
     closedMessage: string;
-  } | null>(null);
+  }>({
+    isOpen: true,
+    canAcceptOrders: true,
+    isWithinOperatingHours: true,
+    outsideHoursMessage: '',
+    closedMessage: ''
+  });
   
   // Coupon states
   const [couponCode, setCouponCode] = useState('');
@@ -366,7 +372,7 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = async () => {
     // Validate site status and operating hours
-    if (siteStatus && !siteStatus.canAcceptOrders) {
+    if (!siteStatus.canAcceptOrders) {
       if (!siteStatus.isOpen) {
         alert(`⚠️ ${siteStatus.closedMessage || 'We are currently closed. Please check back later!'}`);
         return;
@@ -561,7 +567,7 @@ export default function CheckoutPage() {
   return (
     <div className="checkout-container">
       {/* Operating Hours Warning Banner */}
-      {siteStatus && !siteStatus.canAcceptOrders && (
+      {!siteStatus.canAcceptOrders && (
         <div style={{
           padding: '1rem',
           backgroundColor: siteStatus.isOpen ? '#fff3cd' : '#f8d7da',
@@ -762,7 +768,7 @@ export default function CheckoutPage() {
                 className="place-order-btn"
                 onClick={() => {
                   // Check site status and operating hours
-                  if (siteStatus && !siteStatus.canAcceptOrders) {
+                  if (!siteStatus.canAcceptOrders) {
                     if (!siteStatus.isOpen) {
                       alert(`⚠️ ${siteStatus.closedMessage || 'We are currently closed. Please check back later!'}`);
                       return;
@@ -797,10 +803,10 @@ export default function CheckoutPage() {
                     handlePlaceOrder(); // Direct order for cash
                   }
                 }}
-                disabled={isProcessingPayment || (paymentMethod === 'cash' && !isEligibleForCash) || !deliveryInfo.available || (siteStatus && !siteStatus.canAcceptOrders)}
+                disabled={isProcessingPayment || (paymentMethod === 'cash' && !isEligibleForCash) || !deliveryInfo.available || !siteStatus.canAcceptOrders}
               >
                 {isProcessingPayment ? 'Processing...' : 
-                 siteStatus && !siteStatus.canAcceptOrders ? (
+                 !siteStatus.canAcceptOrders ? (
                    siteStatus.isOpen ? '⏰ Outside Operating Hours' : '🚫 Currently Closed'
                  ) :
                  !deliveryInfo.available ? '❌ Delivery Not Available' :
@@ -982,7 +988,7 @@ export default function CheckoutPage() {
             className="payment-btn-mobile"
             onClick={() => {
               // Check site status and operating hours
-              if (siteStatus && !siteStatus.canAcceptOrders) {
+              if (!siteStatus.canAcceptOrders) {
                 if (!siteStatus.isOpen) {
                   alert(`⚠️ ${siteStatus.closedMessage || 'We are currently closed. Please check back later!'}`);
                   return;
@@ -1009,10 +1015,10 @@ export default function CheckoutPage() {
               }
               setShowPaymentModal(true);
             }}
-            disabled={isProcessingPayment || !deliveryInfo.available || (siteStatus && !siteStatus.canAcceptOrders)}
+            disabled={isProcessingPayment || !deliveryInfo.available || !siteStatus.canAcceptOrders}
           >
             {isProcessingPayment ? 'Processing...' : 
-             siteStatus && !siteStatus.canAcceptOrders ? (
+             !siteStatus.canAcceptOrders ? (
                siteStatus.isOpen ? '⏰ Outside Hours' : '🚫 Closed'
              ) :
              !deliveryInfo.available ? '❌ Delivery Not Available' : 'Choose payment method'}
