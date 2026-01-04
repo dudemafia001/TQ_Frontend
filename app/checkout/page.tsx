@@ -95,6 +95,15 @@ export default function CheckoutPage() {
     available: true
   });
   
+  // Site status and operating hours state
+  const [siteStatus, setSiteStatus] = useState<{
+    isOpen: boolean;
+    canAcceptOrders: boolean;
+    isWithinOperatingHours: boolean;
+    outsideHoursMessage: string;
+    closedMessage: string;
+  } | null>(null);
+  
   // Coupon states
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
@@ -103,6 +112,22 @@ export default function CheckoutPage() {
   const [showAllCoupons, setShowAllCoupons] = useState(false);
 
   // ALL EFFECT HOOKS - Must be called before any conditional returns  
+  // Check site status and operating hours
+  useEffect(() => {
+    const fetchSiteStatus = async () => {
+      try {
+        const response = await fetch(buildApiUrl(config.api.endpoints.site.status));
+        const data = await response.json();
+        if (data.success) {
+          setSiteStatus(data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching site status:', error);
+      }
+    };
+    fetchSiteStatus();
+  }, []);
+
   // Authentication check - redirect to auth page if not signed in
   useEffect(() => {
     // Only check authentication after auth loading is complete
@@ -340,6 +365,18 @@ export default function CheckoutPage() {
   };
 
   const handlePlaceOrder = async () => {
+    // Validate site status and operating hours
+    if (siteStatus && !siteStatus.canAcceptOrders) {
+      if (!siteStatus.isOpen) {
+        alert(`⚠️ ${siteStatus.closedMessage || 'We are currently closed. Please check back later!'}`);
+        return;
+      }
+      if (!siteStatus.isWithinOperatingHours) {
+        alert(`⏰ ${siteStatus.outsideHoursMessage || 'We accept orders only between 12:00 PM to 11:00 PM. Please visit us during our operating hours!'}`);
+        return;
+      }
+    }
+
     // Validate delivery availability
     if (!deliveryInfo.available) {
       alert('⚠️ Delivery not available at your location. We only deliver within 6km radius.');
@@ -523,6 +560,27 @@ export default function CheckoutPage() {
 
   return (
     <div className="checkout-container">
+      {/* Operating Hours Warning Banner */}
+      {siteStatus && !siteStatus.canAcceptOrders && (
+        <div style={{
+          padding: '1rem',
+          backgroundColor: siteStatus.isOpen ? '#fff3cd' : '#f8d7da',
+          border: `2px solid ${siteStatus.isOpen ? '#ffc107' : '#f5c6cb'}`,
+          borderRadius: '8px',
+          margin: '1rem',
+          color: siteStatus.isOpen ? '#856404' : '#721c24',
+          fontSize: '14px',
+          fontWeight: '600',
+          textAlign: 'center'
+        }}>
+          {siteStatus.isOpen ? (
+            <>⏰ {siteStatus.outsideHoursMessage || 'We accept orders only between 12:00 PM to 11:00 PM. Please visit us during our operating hours!'}</>
+          ) : (
+            <>🚫 {siteStatus.closedMessage || 'We are currently closed. Please check back later!'}</>
+          )}
+        </div>
+      )}
+
       {/* Header */}
       <div className="checkout-header">
         <button className="back-btn" onClick={() => router.push('/')}>
@@ -703,6 +761,18 @@ export default function CheckoutPage() {
               <button 
                 className="place-order-btn"
                 onClick={() => {
+                  // Check site status and operating hours
+                  if (siteStatus && !siteStatus.canAcceptOrders) {
+                    if (!siteStatus.isOpen) {
+                      alert(`⚠️ ${siteStatus.closedMessage || 'We are currently closed. Please check back later!'}`);
+                      return;
+                    }
+                    if (!siteStatus.isWithinOperatingHours) {
+                      alert(`⏰ ${siteStatus.outsideHoursMessage || 'We accept orders only between 12:00 PM to 11:00 PM. Please visit us during our operating hours!'}`);
+                      return;
+                    }
+                  }
+                  
                   if (!deliveryInfo.available) {
                     alert('⚠️ Delivery not available at your location. We only deliver within 6km radius. Please change your delivery address.');
                     setShowLocationModal(true);
@@ -727,9 +797,12 @@ export default function CheckoutPage() {
                     handlePlaceOrder(); // Direct order for cash
                   }
                 }}
-                disabled={isProcessingPayment || (paymentMethod === 'cash' && !isEligibleForCash) || !deliveryInfo.available}
+                disabled={isProcessingPayment || (paymentMethod === 'cash' && !isEligibleForCash) || !deliveryInfo.available || (siteStatus && !siteStatus.canAcceptOrders)}
               >
                 {isProcessingPayment ? 'Processing...' : 
+                 siteStatus && !siteStatus.canAcceptOrders ? (
+                   siteStatus.isOpen ? '⏰ Outside Operating Hours' : '🚫 Currently Closed'
+                 ) :
                  !deliveryInfo.available ? '❌ Delivery Not Available' :
                  !paymentMethod ? 'Select Payment Method' :
                  paymentMethod === 'online' ? 'Proceed to Payment' : 'Place Order'}
@@ -908,6 +981,18 @@ export default function CheckoutPage() {
           <button 
             className="payment-btn-mobile"
             onClick={() => {
+              // Check site status and operating hours
+              if (siteStatus && !siteStatus.canAcceptOrders) {
+                if (!siteStatus.isOpen) {
+                  alert(`⚠️ ${siteStatus.closedMessage || 'We are currently closed. Please check back later!'}`);
+                  return;
+                }
+                if (!siteStatus.isWithinOperatingHours) {
+                  alert(`⏰ ${siteStatus.outsideHoursMessage || 'We accept orders only between 12:00 PM to 11:00 PM. Please visit us during our operating hours!'}`);
+                  return;
+                }
+              }
+              
               if (!deliveryInfo.available) {
                 alert('⚠️ Delivery not available at your location. We only deliver within 6km radius. Please change your delivery address.');
                 setShowLocationModal(true);
@@ -924,9 +1009,12 @@ export default function CheckoutPage() {
               }
               setShowPaymentModal(true);
             }}
-            disabled={isProcessingPayment || !deliveryInfo.available}
+            disabled={isProcessingPayment || !deliveryInfo.available || (siteStatus && !siteStatus.canAcceptOrders)}
           >
             {isProcessingPayment ? 'Processing...' : 
+             siteStatus && !siteStatus.canAcceptOrders ? (
+               siteStatus.isOpen ? '⏰ Outside Hours' : '🚫 Closed'
+             ) :
              !deliveryInfo.available ? '❌ Delivery Not Available' : 'Choose payment method'}
           </button>
         </div>

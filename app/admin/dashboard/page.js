@@ -40,9 +40,19 @@ export default function AdminDashboard() {
   const [isQueryModalOpen, setIsQueryModalOpen] = useState(false);
   
   // Site status state
-  const [siteStatus, setSiteStatus] = useState({ isOpen: true, closedMessage: '', reopenTime: null });
+  const [siteStatus, setSiteStatus] = useState({ 
+    isOpen: true, 
+    closedMessage: '', 
+    reopenTime: null,
+    operatingHoursEnabled: true,
+    operatingHours: { start: '12:00', end: '23:00' },
+    outsideHoursMessage: ''
+  });
   const [tempMessage, setTempMessage] = useState('');
   const [tempReopenTime, setTempReopenTime] = useState('');
+  const [tempOperatingHours, setTempOperatingHours] = useState({ start: '12:00', end: '23:00' });
+  const [tempOutsideHoursMessage, setTempOutsideHoursMessage] = useState('');
+  const [operatingHoursEnabled, setOperatingHoursEnabled] = useState(true);
 
   // Products section state
   const [products, setProducts] = useState([]);
@@ -431,6 +441,9 @@ export default function AdminDashboard() {
       if (data.success) {
         setSiteStatus(data.data);
         setTempMessage(data.data.closedMessage);
+        setTempOutsideHoursMessage(data.data.outsideHoursMessage || '');
+        setOperatingHoursEnabled(data.data.operatingHoursEnabled !== false);
+        setTempOperatingHours(data.data.operatingHours || { start: '12:00', end: '23:00' });
         if (data.data.reopenTime) {
           const date = new Date(data.data.reopenTime);
           const localDateTime = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
@@ -449,7 +462,10 @@ export default function AdminDashboard() {
       const payload = { 
         isOpen, 
         closedMessage: tempMessage,
-        reopenTime: tempReopenTime ? new Date(tempReopenTime).toISOString() : null
+        reopenTime: tempReopenTime ? new Date(tempReopenTime).toISOString() : null,
+        operatingHoursEnabled: operatingHoursEnabled,
+        operatingHours: tempOperatingHours,
+        outsideHoursMessage: tempOutsideHoursMessage
       };
       const res = await fetch(buildApiUrl(config.api.endpoints.site.update), {
         method: 'POST',
@@ -1253,6 +1269,137 @@ export default function AdminDashboard() {
                     }}
                   >
                     ✅ Open Site
+                  </button>
+                </div>
+                
+                {/* Operating Hours Section */}
+                <div style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '2px solid #e2e8f0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+                    <div style={{ fontSize: '2rem' }}>⏰</div>
+                    <h3 style={{ margin: 0 }}>Operating Hours Control</h3>
+                  </div>
+
+                  <div style={{ marginBottom: '1.5rem' }}>
+                    <label style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '0.75rem',
+                      padding: '1rem',
+                      backgroundColor: '#f7fafc',
+                      borderRadius: '6px',
+                      cursor: 'pointer'
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={operatingHoursEnabled}
+                        onChange={(e) => setOperatingHoursEnabled(e.target.checked)}
+                        style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                      />
+                      <span style={{ fontWeight: '600', fontSize: '1rem' }}>
+                        Enable Operating Hours Restrictions
+                      </span>
+                    </label>
+                    <small style={{ color: '#718096', fontSize: '0.875rem', marginTop: '0.5rem', display: 'block', marginLeft: '0.5rem' }}>
+                      When enabled, orders will only be accepted during specified hours
+                    </small>
+                  </div>
+
+                  {operatingHoursEnabled && (
+                    <>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                        <div>
+                          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+                            🌅 Start Time:
+                          </label>
+                          <input
+                            type="time"
+                            value={tempOperatingHours.start}
+                            onChange={(e) => setTempOperatingHours({ ...tempOperatingHours, start: e.target.value })}
+                            style={{ 
+                              width: '100%', 
+                              padding: '0.75rem', 
+                              border: '1px solid #e2e8f0',
+                              borderRadius: '6px',
+                              fontSize: '1rem',
+                              fontFamily: 'inherit'
+                            }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+                            🌙 End Time:
+                          </label>
+                          <input
+                            type="time"
+                            value={tempOperatingHours.end}
+                            onChange={(e) => setTempOperatingHours({ ...tempOperatingHours, end: e.target.value })}
+                            style={{ 
+                              width: '100%', 
+                              padding: '0.75rem', 
+                              border: '1px solid #e2e8f0',
+                              borderRadius: '6px',
+                              fontSize: '1rem',
+                              fontFamily: 'inherit'
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div style={{ 
+                        padding: '1rem', 
+                        backgroundColor: '#edf2f7', 
+                        borderRadius: '6px',
+                        marginBottom: '1.5rem'
+                      }}>
+                        <strong>Current Setting:</strong> Orders accepted from{' '}
+                        <span style={{ color: '#2b6cb0', fontWeight: 'bold' }}>
+                          {tempOperatingHours.start}
+                        </span>
+                        {' '}to{' '}
+                        <span style={{ color: '#2b6cb0', fontWeight: 'bold' }}>
+                          {tempOperatingHours.end}
+                        </span>
+                      </div>
+
+                      <div style={{ marginBottom: '1.5rem' }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+                          Message when outside operating hours:
+                        </label>
+                        <textarea
+                          value={tempOutsideHoursMessage}
+                          onChange={(e) => setTempOutsideHoursMessage(e.target.value)}
+                          placeholder="We accept orders only between 12:00 PM to 11:00 PM. Please visit us during our operating hours!"
+                          style={{ 
+                            width: '100%', 
+                            padding: '0.75rem', 
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '6px',
+                            minHeight: '100px',
+                            fontFamily: 'inherit'
+                          }}
+                        />
+                        <small style={{ color: '#718096', fontSize: '0.875rem', marginTop: '0.5rem', display: 'block' }}>
+                          This message will be shown to users trying to order outside operating hours
+                        </small>
+                      </div>
+                    </>
+                  )}
+
+                  <button
+                    onClick={() => updateSiteStatus(siteStatus.isOpen)}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      backgroundColor: '#3182ce',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      fontSize: '1rem'
+                    }}
+                  >
+                    💾 Save All Settings
                   </button>
                 </div>
               </div>
