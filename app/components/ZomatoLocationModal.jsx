@@ -7,7 +7,7 @@ const DELIVERY_CENTER = {
   lng: 80.3600507
 };
 
-const DELIVERY_RADIUS_KM = 7;
+const DELIVERY_RADIUS_KM = 6;
 
 export default function LocationModal({ isOpen, onClose, onLocationSet }) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -488,11 +488,17 @@ export default function LocationModal({ isOpen, onClose, onLocationSet }) {
   // Save address
   const handleSaveAddress = () => {
     if (selectedAddress) {
+      // Check if delivery is available (within 6km radius)
+      if (deliveryStatus && deliveryStatus.available === false) {
+        alert(`⚠️ This location is ${deliveryStatus.distance || 'too far'} km away.\n\nWe only deliver within ${DELIVERY_RADIUS_KM}km radius from our restaurant.\n\nPlease choose a different location.`);
+        return;
+      }
+
       onLocationSet({
         lat: selectedAddress.lat,
         lng: selectedAddress.lng,
         address: selectedAddress.address,
-        isWithinDeliveryRadius: true, // Always true since we removed delivery check
+        isWithinDeliveryRadius: deliveryStatus?.available !== false,
         distance: deliveryStatus?.distance,
         duration: deliveryStatus?.duration,
         durationMinutes: deliveryStatus?.durationMinutes,
@@ -719,9 +725,15 @@ export default function LocationModal({ isOpen, onClose, onLocationSet }) {
           <button 
             className="save-address-btn"
             onClick={handleSaveAddress}
-            disabled={!selectedAddress}
+            disabled={!selectedAddress || (deliveryStatus && deliveryStatus.available === false)}
+            style={{
+              backgroundColor: (deliveryStatus && deliveryStatus.available === false) ? '#ccc' : '',
+              cursor: (deliveryStatus && deliveryStatus.available === false) ? 'not-allowed' : 'pointer'
+            }}
           >
-            Save address
+            {(deliveryStatus && deliveryStatus.available === false) 
+              ? '❌ Outside Delivery Area' 
+              : 'Save address'}
           </button>
         </div>
       </div>

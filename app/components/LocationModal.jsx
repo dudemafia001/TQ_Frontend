@@ -7,7 +7,7 @@ const DELIVERY_CENTER = {
   lng: 80.3600507
 };
 
-const DELIVERY_RADIUS_KM = 7;
+const DELIVERY_RADIUS_KM = 6;
 
 export default function LocationModal({ isOpen, onClose, onLocationSet }) {
   const [userLocation, setUserLocation] = useState(null);
@@ -268,12 +268,18 @@ export default function LocationModal({ isOpen, onClose, onLocationSet }) {
 
   const handleConfirmLocation = () => {
     if (userLocation && deliveryStatus && !deliveryStatus.loading) {
+      // Check if delivery is available (within 6km radius)
+      if (deliveryStatus.available === false) {
+        alert(`⚠️ This location is ${deliveryStatus.distance || 'too far'} km away.\n\nWe only deliver within ${DELIVERY_RADIUS_KM}km radius from our restaurant.\n\nPlease choose a different location.`);
+        return;
+      }
+
       // Set the user's location
       onLocationSet({
         lat: userLocation.lat,
         lng: userLocation.lng,
         address: userLocation.address,
-        isWithinDeliveryRadius: deliveryStatus.isAvailable,
+        isWithinDeliveryRadius: deliveryStatus.available !== false,
         distance: deliveryStatus.distance
       });
       
@@ -356,6 +362,12 @@ export default function LocationModal({ isOpen, onClose, onLocationSet }) {
   // Confirm location and close modal
   const handleConfirmLocation = () => {
     if (userLocation && deliveryStatus) {
+      // Check if delivery is available (within 6km radius)
+      if (deliveryStatus.available === false) {
+        alert(`⚠️ This location is ${deliveryStatus.distance || 'too far'} km away.\n\nWe only deliver within ${DELIVERY_RADIUS_KM}km radius from our restaurant.\n\nPlease choose a different location.`);
+        return;
+      }
+
       onLocationSet({
         location: userLocation,
         deliveryAvailable: deliveryStatus.available,

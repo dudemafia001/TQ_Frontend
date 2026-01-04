@@ -340,6 +340,25 @@ export default function CheckoutPage() {
   };
 
   const handlePlaceOrder = async () => {
+    // Validate delivery availability
+    if (!deliveryInfo.available) {
+      alert('⚠️ Delivery not available at your location. We only deliver within 6km radius.');
+      return;
+    }
+
+    // Validate address
+    if (!manualAddress || manualAddress.trim() === '') {
+      alert('Please enter your complete delivery address');
+      return;
+    }
+
+    // Validate location is set
+    if (!userLocation || !userLocation.lat || !userLocation.lng) {
+      alert('Please select your delivery location first');
+      setShowLocationModal(true);
+      return;
+    }
+
     if (paymentMethod === 'online') {
       await processOnlinePayment();
     } else {
@@ -567,6 +586,41 @@ export default function CheckoutPage() {
               </button>
             </div>
             
+            {/* Delivery Status Warning */}
+            {!deliveryInfo.available && (
+              <div style={{
+                padding: '12px',
+                backgroundColor: '#fff3cd',
+                border: '1px solid #ffc107',
+                borderRadius: '8px',
+                marginBottom: '15px',
+                color: '#856404',
+                fontSize: '14px',
+                fontWeight: '500'
+              }}>
+                ⚠️ This location is outside our 6km delivery radius. Please change your address to proceed.
+              </div>
+            )}
+            
+            {/* Delivery Info Display */}
+            {deliveryInfo.distance && (
+              <div style={{
+                padding: '12px',
+                backgroundColor: deliveryInfo.available ? '#d4edda' : '#f8d7da',
+                border: `1px solid ${deliveryInfo.available ? '#c3e6cb' : '#f5c6cb'}`,
+                borderRadius: '8px',
+                marginBottom: '15px',
+                fontSize: '14px'
+              }}>
+                <div style={{ marginBottom: '5px' }}>
+                  📍 <strong>Distance:</strong> {deliveryInfo.distance} km
+                </div>
+                <div>
+                  ⏱️ <strong>Estimated Time:</strong> {deliveryInfo.duration}
+                </div>
+              </div>
+            )}
+            
             <div className="address-content">
               <div className="address-type">
                 <span className="home-icon">🏠</span>
@@ -649,8 +703,18 @@ export default function CheckoutPage() {
               <button 
                 className="place-order-btn"
                 onClick={() => {
+                  if (!deliveryInfo.available) {
+                    alert('⚠️ Delivery not available at your location. We only deliver within 6km radius. Please change your delivery address.');
+                    setShowLocationModal(true);
+                    return;
+                  }
                   if (!manualAddress || manualAddress.trim() === '') {
                     alert('Please enter your complete delivery address');
+                    return;
+                  }
+                  if (!userLocation || !userLocation.lat || !userLocation.lng) {
+                    alert('Please select your delivery location first');
+                    setShowLocationModal(true);
                     return;
                   }
                   if (!paymentMethod) {
@@ -663,9 +727,10 @@ export default function CheckoutPage() {
                     handlePlaceOrder(); // Direct order for cash
                   }
                 }}
-                disabled={isProcessingPayment || (paymentMethod === 'cash' && !isEligibleForCash)}
+                disabled={isProcessingPayment || (paymentMethod === 'cash' && !isEligibleForCash) || !deliveryInfo.available}
               >
                 {isProcessingPayment ? 'Processing...' : 
+                 !deliveryInfo.available ? '❌ Delivery Not Available' :
                  !paymentMethod ? 'Select Payment Method' :
                  paymentMethod === 'online' ? 'Proceed to Payment' : 'Place Order'}
               </button>
@@ -842,10 +907,27 @@ export default function CheckoutPage() {
           <div className="total-amount">₹{finalTotal.toFixed(2)}</div>
           <button 
             className="payment-btn-mobile"
-            onClick={() => setShowPaymentModal(true)}
-            disabled={isProcessingPayment}
+            onClick={() => {
+              if (!deliveryInfo.available) {
+                alert('⚠️ Delivery not available at your location. We only deliver within 6km radius. Please change your delivery address.');
+                setShowLocationModal(true);
+                return;
+              }
+              if (!manualAddress || manualAddress.trim() === '') {
+                alert('Please enter your complete delivery address');
+                return;
+              }
+              if (!userLocation || !userLocation.lat || !userLocation.lng) {
+                alert('Please select your delivery location first');
+                setShowLocationModal(true);
+                return;
+              }
+              setShowPaymentModal(true);
+            }}
+            disabled={isProcessingPayment || !deliveryInfo.available}
           >
-            {isProcessingPayment ? 'Processing...' : 'Choose payment method'}
+            {isProcessingPayment ? 'Processing...' : 
+             !deliveryInfo.available ? '❌ Delivery Not Available' : 'Choose payment method'}
           </button>
         </div>
       </div>

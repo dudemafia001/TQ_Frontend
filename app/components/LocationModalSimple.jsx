@@ -7,7 +7,7 @@ const DELIVERY_CENTER = {
   lng: 80.2802241
 };
 
-const DELIVERY_RADIUS_KM = 7;
+const DELIVERY_RADIUS_KM = 6;
 
 export default function LocationModalSimple({ isOpen, onClose, onLocationSet }) {
   const [userLocation, setUserLocation] = useState(null);
