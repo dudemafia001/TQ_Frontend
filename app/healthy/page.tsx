@@ -38,11 +38,14 @@ export default function HealthyMenu() {
     // ✅ Load Bootstrap only on client
     import("bootstrap/dist/js/bootstrap.bundle.min.js")
       .then((bootstrap: any) => {
-        console.log("✅ Bootstrap JS loaded");
+        console.log("✅ Bootstrap JS loaded on healthy page");
+        // Store Bootstrap globally for modal access
+        (window as any).bootstrap = bootstrap;
         const modalEl = document.getElementById("cartModal");
         if (modalEl) {
-          new (bootstrap as any).Modal(modalEl);
-          console.log("✅ Bootstrap modal initialized");
+          // Initialize modal but don't show it yet
+          const modalInstance = new bootstrap.Modal(modalEl);
+          console.log("✅ Bootstrap modal initialized on healthy page");
         }
       })
       .catch((err) => console.error("❌ Bootstrap JS failed", err));
@@ -99,7 +102,7 @@ export default function HealthyMenu() {
 
   const addToCart = (id: string, variant: string) => {
     const key = `${id}_${variant}`;
-    const product = products.find((p: any) => p._id === id);
+    const product = allProducts.find((p: any) => p._id === id);
     const variantObj = product?.variants.find((v: any) => v.type === variant);
     
     addToCartContext(key, product?.name, variant, variantObj?.price);
@@ -107,7 +110,7 @@ export default function HealthyMenu() {
 
   const increaseQty = (id: string, variant: string) => {
     const key = `${id}_${variant}`;
-    const product = products.find((p: any) => p._id === id);
+    const product = allProducts.find((p: any) => p._id === id);
     const variantObj = product?.variants.find((v: any) => v.type === variant);
     
     addToCartContext(key, product?.name, variant, variantObj?.price);
@@ -327,7 +330,10 @@ export default function HealthyMenu() {
                   {cartItems.map((item) => {
                     const [id, variant] = item.id.split("_");
                     const product = allProducts.find((p: any) => p._id === id);
-                    if (!product) return null;
+                    if (!product) {
+                      console.warn(`Product not found for cart item: ${id}`);
+                      return null;
+                    }
                     
                     return (
                       <li
@@ -348,7 +354,11 @@ export default function HealthyMenu() {
                               background: "#dd9933",
                               color: "#fff",
                             }}
-                            onClick={() => decreaseQty(id, variant)}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              decreaseQty(id, variant);
+                            }}
                           >
                             –
                           </button>
@@ -359,13 +369,21 @@ export default function HealthyMenu() {
                               background: "#124f31",
                               color: "#fff",
                             }}
-                            onClick={() => increaseQty(id, variant)}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              increaseQty(id, variant);
+                            }}
                           >
                             +
                           </button>
                           <button
                             className="remove-btn ms-3"
-                            onClick={() => removeFromCart(item.id)}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              removeFromCart(item.id);
+                            }}
                           >
                             Remove
                           </button>
@@ -386,7 +404,10 @@ export default function HealthyMenu() {
                 )}
                 <button 
                   className="btn btn-success"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
                     // Check minimum cart value
                     if (subtotal < 249) {
                       alert('Minimum order value is ₹249. Please add more items to your cart.');

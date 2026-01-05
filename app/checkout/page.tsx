@@ -436,9 +436,47 @@ export default function CheckoutPage() {
         description: 'Food Order Payment',
         order_id: orderData.order.id,
         handler: async (response: any) => {
-          // Handle payment success
+          // Handle payment success - verify payment and save order
           console.log('Payment successful:', response);
-          router.push('/checkout/success');
+          
+          try {
+            const verifyResponse = await fetch(buildApiUrl(config.api.endpoints.payments.verify), {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                orderDetails: {
+                  userId: user,
+                  cartItems,
+                  customerInfo,
+                  deliveryAddress: {
+                    address: manualAddress || deliveryAddress.address || userLocation?.address || 'No address provided',
+                    lat: userLocation?.lat,
+                    lng: userLocation?.lng
+                  },
+                  addressDetails,
+                  subtotal,
+                  packagingCharge,
+                  couponDiscount,
+                  finalTotal,
+                  appliedCoupon
+                }
+              })
+            });
+            
+            const verifyResult = await verifyResponse.json();
+            if (verifyResult.success) {
+              console.log('Order saved successfully');
+              router.push('/checkout/success');
+            } else {
+              throw new Error(verifyResult.message || 'Payment verification failed');
+            }
+          } catch (error) {
+            console.error('Error verifying payment:', error);
+            alert('Payment successful but order could not be saved. Please contact support with payment ID: ' + response.razorpay_payment_id);
+          }
         },
         modal: {
           ondismiss: function() {
@@ -797,11 +835,8 @@ export default function CheckoutPage() {
                     alert('Please select a payment method first');
                     return;
                   }
-                  if (paymentMethod === 'online') {
-                    setShowPaymentModal(true);
-                  } else if (paymentMethod === 'cash' && isEligibleForCash) {
-                    handlePlaceOrder(); // Direct order for cash
-                  }
+                  // Proceed directly with the selected payment method
+                  handlePlaceOrder();
                 }}
                 disabled={isProcessingPayment || (paymentMethod === 'cash' && !isEligibleForCash) || !deliveryInfo.available || !siteStatus.canAcceptOrders}
               >
@@ -1125,22 +1160,18 @@ export default function CheckoutPage() {
                 return;
               }
               if (!paymentMethod) {
-                setShowPaymentModal(true);
+                alert('Please select a payment method first');
                 return;
               }
-              if (paymentMethod === 'online') {
-                handlePlaceOrder();
-              } else if (paymentMethod === 'cash' && isEligibleForCash) {
-                handlePlaceOrder();
-              }
+              handlePlaceOrder();
             }}
-            disabled={isProcessingPayment || (paymentMethod === 'cash' && !isEligibleForCash)}
+            disabled={isProcessingPayment || (paymentMethod === 'cash' && !isEligibleForCash) || !paymentMethod}
           >
             {isProcessingPayment ? 'Processing...' : 
-             !paymentMethod ? 'Choose Payment Method' :
+             !paymentMethod ? 'Select Payment Method Above' :
              paymentMethod === 'online' ? 'Proceed to Payment' : 
              paymentMethod === 'cash' && isEligibleForCash ? 'Place Order' : 
-             'Choose Payment Method'}
+             'Select Payment Method'}
           </button>
         </div>
       </div>

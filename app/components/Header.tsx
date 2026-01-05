@@ -21,7 +21,8 @@ export default function Header() {
   // Handle client-side mounting
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+    console.log('Header mounted, pathname:', pathname);
+  }, [pathname]);
 
   // Close dropdown and mobile menu when clicking outside
   useEffect(() => {
@@ -124,9 +125,26 @@ export default function Header() {
           {isMounted ? (
             (pathname === '/' || pathname === '/healthy') ? (
               <button 
+                type="button"
                 className="header-icon-btn cart-btn"
                 data-bs-toggle="modal"
                 data-bs-target="#cartModal"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Cart button clicked on:', pathname);
+                  
+                  // Manually trigger modal if Bootstrap is loaded
+                  const modalEl = document.getElementById('cartModal');
+                  if (modalEl && (window as any).bootstrap?.Modal) {
+                    try {
+                      const modalInstance = (window as any).bootstrap.Modal.getOrCreateInstance(modalEl);
+                      modalInstance.show();
+                    } catch (error) {
+                      console.error('Error opening modal:', error);
+                    }
+                  }
+                }}
               >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <circle cx="9" cy="21" r="1"></circle>
@@ -264,9 +282,26 @@ export default function Header() {
           {/* Floating Cart Button - Mobile Only */}
           {(pathname === '/' || pathname === '/healthy') ? (
             <button 
+              type="button"
               className="floating-cart-btn"
               data-bs-toggle="modal"
               data-bs-target="#cartModal"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Floating cart clicked on:', pathname);
+                
+                // Manually trigger modal if Bootstrap is loaded
+                const modalEl = document.getElementById('cartModal');
+                if (modalEl && (window as any).bootstrap?.Modal) {
+                  try {
+                    const modalInstance = (window as any).bootstrap.Modal.getOrCreateInstance(modalEl);
+                    modalInstance.show();
+                  } catch (error) {
+                    console.error('Error opening modal:', error);
+                  }
+                }
+              }}
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
                 <circle cx="9" cy="21" r="1"></circle>
