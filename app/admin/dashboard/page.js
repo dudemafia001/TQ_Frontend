@@ -186,14 +186,19 @@ export default function AdminDashboard() {
       });
 
       if (response.ok) {
+        const data = await response.json();
+        console.log('Order status updated successfully:', data);
         fetchOrders(); // Refresh orders
         fetchAnalytics(); // Refresh analytics
-        console.log('Order status updated successfully:', orderId, newStatus);
+        alert(`Order ${orderId} status updated to ${newStatus}`);
       } else {
-        console.error('Failed to update order status');
+        const errorData = await response.json();
+        console.error('Failed to update order status:', errorData);
+        alert(`Failed to update order status: ${errorData.message || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error updating order status:', error);
+      alert(`Error updating order status: ${error.message}`);
     }
   };
 
