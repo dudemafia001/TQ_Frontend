@@ -637,6 +637,45 @@
   }
 }
 
+/* Mobile Select Payment Button */
+.mobile-select-payment-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+  color: white;
+  border: none;
+  padding: 18px 24px;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+  transition: all 0.3s ease;
+}
+
+.mobile-select-payment-btn:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.2);
+}
+
+.payment-prompt-icon {
+  font-size: 24px;
+}
+
+.payment-prompt-text {
+  flex: 1;
+  text-align: center;
+}
+
+.payment-prompt-arrow {
+  font-size: 20px;
+  font-weight: bold;
+}
+
 /* Loading states */
 .loading-shimmer {
   background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);

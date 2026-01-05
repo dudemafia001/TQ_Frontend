@@ -1133,46 +1133,52 @@ export default function CheckoutPage() {
         </div>
         
         <div className="mobile-payment-section">
-          <div className="mobile-payment-info">
-            <div className="mobile-total-amount">₹{finalTotal.toFixed(2)}</div>
-            {paymentMethod && (
-              <div className="mobile-payment-method">
-                <span className="mobile-payment-icon">
-                  {paymentMethod === 'online' ? '💳' : '💵'}
-                </span>
-                <span className="mobile-payment-text">
-                  {paymentMethod === 'online' ? 'Online Payment' : 'Cash on Delivery'}
-                </span>
-                <button 
-                  className="mobile-change-payment-btn"
-                  onClick={() => setShowPaymentModal(true)}
-                >
-                  Change
-                </button>
+          {!paymentMethod ? (
+            <button 
+              className="mobile-select-payment-btn"
+              onClick={() => setShowPaymentModal(true)}
+            >
+              <span className="payment-prompt-icon">💳</span>
+              <span className="payment-prompt-text">Select Payment Method</span>
+              <span className="payment-prompt-arrow">→</span>
+            </button>
+          ) : (
+            <>
+              <div className="mobile-payment-info">
+                <div className="mobile-total-amount">₹{finalTotal.toFixed(2)}</div>
+                <div className="mobile-payment-method">
+                  <span className="mobile-payment-icon">
+                    {paymentMethod === 'online' ? '💳' : '💵'}
+                  </span>
+                  <span className="mobile-payment-text">
+                    {paymentMethod === 'online' ? 'Online Payment' : 'Cash on Delivery'}
+                  </span>
+                  <button 
+                    className="mobile-change-payment-btn"
+                    onClick={() => setShowPaymentModal(true)}
+                  >
+                    Change
+                  </button>
+                </div>
               </div>
-            )}
-          </div>
-          <button 
-            className="mobile-payment-btn"
-            onClick={() => {
-              if (!manualAddress || manualAddress.trim() === '') {
-                alert('Please enter your complete delivery address');
-                return;
-              }
-              if (!paymentMethod) {
-                alert('Please select a payment method first');
-                return;
-              }
-              handlePlaceOrder();
-            }}
-            disabled={isProcessingPayment || (paymentMethod === 'cash' && !isEligibleForCash) || !paymentMethod}
-          >
-            {isProcessingPayment ? 'Processing...' : 
-             !paymentMethod ? 'Select Payment Method Above' :
-             paymentMethod === 'online' ? 'Proceed to Payment' : 
-             paymentMethod === 'cash' && isEligibleForCash ? 'Place Order' : 
-             'Select Payment Method'}
-          </button>
+              <button 
+                className="mobile-payment-btn"
+                onClick={() => {
+                  if (!manualAddress || manualAddress.trim() === '') {
+                    alert('Please enter your complete delivery address');
+                    return;
+                  }
+                  handlePlaceOrder();
+                }}
+                disabled={isProcessingPayment || (paymentMethod === 'cash' && !isEligibleForCash)}
+              >
+                {isProcessingPayment ? 'Processing...' : 
+                 paymentMethod === 'online' ? 'Proceed to Payment' : 
+                 paymentMethod === 'cash' && isEligibleForCash ? 'Place Order' : 
+                 'Place Order'}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

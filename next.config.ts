@@ -1,11 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Enable static export but handle admin pages specially
-  output: 'export',
+  // Removed static export to enable dynamic features like admin authentication
+  // output: 'export',
   trailingSlash: true,
   images: {
-    unoptimized: true,
+    unoptimized: false,
     remotePatterns: [
       {
         protocol: 'https',
