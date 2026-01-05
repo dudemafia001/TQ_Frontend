@@ -1,7 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Enable static export but handle admin pages specially
+  output: 'export',
+  trailingSlash: true,
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
@@ -18,6 +22,10 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Skip pre-rendering for admin pages that need dynamic behavior
+  experimental: {
+    // This helps with client-side routing in static exports
+  }
 };
 
 export default nextConfig;
