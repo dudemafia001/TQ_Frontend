@@ -348,8 +348,6 @@
   display: flex;
   align-items: center;
   gap: 0;
-  border: 1px solid #123f31;
-  border-radius: 4px;
 }
 
 .quantity-btn {
@@ -384,8 +382,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-left: 1px solid #123f31;
-  border-right: 1px solid #123f31;
 }
 
 .item-price {
@@ -1787,10 +1783,6 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #f7fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 4px;
 }
 
 .quantity-btn {
