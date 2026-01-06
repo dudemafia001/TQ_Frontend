@@ -279,8 +279,8 @@ export default function Header() {
             </Link>
           </nav>
 
-          {/* Floating Cart Button - Mobile Only */}
-          {(pathname === '/' || pathname === '/healthy') ? (
+          {/* Floating Cart Button - Mobile Only - Hide on checkout page */}
+          {!pathname.startsWith('/checkout') && ((pathname === '/' || pathname === '/healthy') ? (
             <button 
               type="button"
               className="floating-cart-btn"
@@ -319,7 +319,7 @@ export default function Header() {
               </svg>
               {totalItems > 0 && <span className="floating-cart-badge">{totalItems}</span>}
             </Link>
-          )}
+          ))}
         </>
       )}
     </header>
