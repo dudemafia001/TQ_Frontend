@@ -871,20 +871,8 @@ export default function CheckoutPage() {
                     )}
                   </div>
                   <div className="item-controls">
-                    <div className="quantity-controls">
-                      <button 
-                        className="quantity-btn"
-                        onClick={() => updateQuantity?.(item.id, item.quantity - 1)}
-                      >
-                        −
-                      </button>
-                      <span className="quantity">{item.quantity}</span>
-                      <button 
-                        className="quantity-btn"
-                        onClick={() => updateQuantity?.(item.id, item.quantity + 1)}
-                      >
-                        +
-                      </button>
+                    <div className="quantity-display">
+                      <span className="quantity">Qty: {item.quantity}</span>
                     </div>
                     <div className="item-price">₹{((item.price || 364) * item.quantity).toFixed(2)}</div>
                   </div>
@@ -976,6 +964,7 @@ export default function CheckoutPage() {
           {/* Bill Details Section */}
           <div className="section bill-details">
             <h3>Bill Details</h3>
+            
             <div className="bill-breakdown">
               <div className="bill-row">
                 <span>Sub Total</span>
