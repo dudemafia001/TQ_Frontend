@@ -687,6 +687,11 @@
   .floating-cart-btn {
     display: flex;
   }
+  
+  /* Hide floating cart on checkout page */
+  body:has([class*="checkout"]) .floating-cart-btn {
+    display: none !important;
+  }
 }
 
 .floating-cart-btn:hover {

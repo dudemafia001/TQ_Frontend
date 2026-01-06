@@ -280,7 +280,7 @@ export default function Header() {
           </nav>
 
           {/* Floating Cart Button - Mobile Only - Hide on checkout page */}
-          {!pathname.startsWith('/checkout') && ((pathname === '/' || pathname === '/healthy') ? (
+          {isMounted && !pathname.startsWith('/checkout') && ((pathname === '/' || pathname === '/healthy') ? (
             <button 
               type="button"
               className="floating-cart-btn"
