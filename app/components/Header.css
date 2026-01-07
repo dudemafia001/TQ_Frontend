@@ -664,58 +664,7 @@
   stroke: #B8860B;
 }
 
-/* Floating Cart Button */
-.floating-cart-btn {
-  position: fixed;
-  bottom: 90px;
-  right: 20px;
-  width: 60px;
-  height: 60px;
-  background: #124f31;
-  border-radius: 16px;
-  border: none;
-  box-shadow: 0 4px 16px rgba(18, 79, 49, 0.4);
-  cursor: pointer;
-  z-index: 998;
-  transition: all 0.3s ease;
-  display: none;
-  align-items: center;
-  justify-content: center;
-}
-
-@media (max-width: 768px) {
-  .floating-cart-btn {
-    display: flex !important;
-  }
-}
-
-.floating-cart-btn:hover {
-  background: #0d3d25;
-  transform: scale(1.05);
-  box-shadow: 0 6px 20px rgba(18, 79, 49, 0.5);
-}
-
-.floating-cart-btn:active {
-  transform: scale(0.95);
-}
-
-.floating-cart-badge {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  background: #ef4444;
-  color: white;
-  font-size: 11px;
-  font-weight: 600;
-  min-width: 20px;
-  height: 20px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 5px;
-  border: 2px solid white;
-}
+/* Floating Cart Button - Removed, using header cart instead */
 
 /* Hide hamburger on mobile, show on tablet */
 @media (max-width: 768px) {
@@ -727,9 +676,9 @@
     display: none !important;
   }
   
-  /* Hide desktop cart icon on mobile */
+  /* Show cart icon on mobile in header */
   .header-icons .cart-btn {
-    display: none !important;
+    display: flex !important;
   }
 }
 
@@ -741,10 +690,6 @@
 
 @media (min-width: 769px) {
   .mobile-bottom-nav {
-    display: none !important;
-  }
-  
-  .floating-cart-btn {
     display: none !important;
   }
 }

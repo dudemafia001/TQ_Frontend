@@ -2529,8 +2529,3 @@ textarea:focus {
   background: #e55a2b;
 }
 
-/* Hide floating cart button on checkout page - Override with high specificity */
-.floating-cart-btn {
-  display: none !important;
-}
-
