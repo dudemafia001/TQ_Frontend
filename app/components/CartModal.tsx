@@ -11,7 +11,7 @@ export default function CartModal() {
   const [allProducts, setAllProducts] = useState<any[]>([]);
 
   // Calculate subtotal
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const subtotal = cartItems.reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0);
 
   // Fetch products to get details
   useEffect(() => {
