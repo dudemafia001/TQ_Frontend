@@ -1,17 +1,45 @@
 "use client";
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
 export default function CartModal() {
   const { cartItems, totalItems, removeFromCart, updateQuantity } = useCart();
   const { isAuthenticated, user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [allProducts, setAllProducts] = useState<any[]>([]);
 
   // Calculate subtotal
   const subtotal = cartItems.reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0);
+
+  // Close modal when navigating to checkout or auth pages
+  useEffect(() => {
+    if (pathname === '/checkout' || pathname === '/auth') {
+      const modal = document.getElementById('cartModal');
+      if (modal) {
+        // Try Bootstrap method first
+        if (typeof window !== 'undefined' && (window as any).bootstrap?.Modal) {
+          const modalInstance = (window as any).bootstrap.Modal.getInstance(modal);
+          if (modalInstance) {
+            modalInstance.hide();
+          }
+        }
+        
+        // Force cleanup manually
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        backdrops.forEach(backdrop => backdrop.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+        modal.classList.remove('show');
+        modal.style.display = 'none';
+        modal.setAttribute('aria-hidden', 'true');
+        modal.removeAttribute('aria-modal');
+      }
+    }
+  }, [pathname]);
 
   // Fetch products to get details
   useEffect(() => {
@@ -62,31 +90,68 @@ export default function CartModal() {
     }
     
     if (!isAuthenticated || !user) {
-      router.push('/auth?redirect=checkout');
+      // Close modal before auth redirect
+      const modal = document.getElementById('cartModal');
+      if (modal && typeof window !== 'undefined' && (window as any).bootstrap?.Modal) {
+        const modalInstance = (window as any).bootstrap.Modal.getInstance(modal);
+        if (modalInstance) {
+          modalInstance.hide();
+        }
+      }
+      
+      setTimeout(() => {
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        backdrops.forEach(backdrop => backdrop.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+        router.push('/auth?redirect=checkout');
+      }, 300);
       return;
     }
     
-    // Close the modal first
+    // Close the modal completely before navigation
     const modal = document.getElementById('cartModal');
-    const modalInstance = (window as any).bootstrap?.Modal?.getInstance(modal);
-    if (modalInstance) {
-      modalInstance.hide();
+    if (modal) {
+      // Check if Bootstrap is loaded
+      if (typeof window !== 'undefined' && (window as any).bootstrap?.Modal) {
+        const modalInstance = (window as any).bootstrap.Modal.getInstance(modal);
+        if (modalInstance) {
+          modalInstance.hide();
+        } else {
+          // Try creating instance if it doesn't exist
+          try {
+            const newInstance = new (window as any).bootstrap.Modal(modal);
+            newInstance.hide();
+          } catch (e) {
+            console.log('Bootstrap Modal not available, using manual close');
+          }
+        }
+      }
+      
+      // Manual cleanup - works even without Bootstrap
+      modal.classList.remove('show');
+      modal.style.display = 'none';
+      modal.setAttribute('aria-hidden', 'true');
+      modal.removeAttribute('aria-modal');
     }
     
-    // Ensure complete cleanup of modal backdrop and body styles
+    // Force cleanup with longer delay to ensure modal is closed
     setTimeout(() => {
-      // Remove any lingering modal backdrops
+      // Remove all modal backdrops
       const backdrops = document.querySelectorAll('.modal-backdrop');
-      backdrops.forEach(backdrop => backdrop.remove());
+      backdrops.forEach(backdrop => {
+        backdrop.remove();
+      });
       
-      // Reset body styles
+      // Remove modal-open class and reset body styles
       document.body.classList.remove('modal-open');
       document.body.style.overflow = '';
       document.body.style.paddingRight = '';
       
       // Navigate to checkout
       router.push('/checkout');
-    }, 150);
+    }, 300);
   };
 
   return (
