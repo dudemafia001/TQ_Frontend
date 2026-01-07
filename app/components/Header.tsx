@@ -279,47 +279,49 @@ export default function Header() {
             </Link>
           </nav>
 
-          {/* Floating Cart Button - Mobile Only - Hide on checkout page */}
-          {isMounted && !pathname.startsWith('/checkout') && ((pathname === '/' || pathname === '/healthy') ? (
-            <button 
-              type="button"
-              className="floating-cart-btn"
-              data-bs-toggle="modal"
-              data-bs-target="#cartModal"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('Floating cart clicked on:', pathname);
-                
-                // Manually trigger modal if Bootstrap is loaded
-                const modalEl = document.getElementById('cartModal');
-                if (modalEl && (window as any).bootstrap?.Modal) {
-                  try {
-                    const modalInstance = (window as any).bootstrap.Modal.getOrCreateInstance(modalEl);
-                    modalInstance.show();
-                  } catch (error) {
-                    console.error('Error opening modal:', error);
+          {/* Floating Cart Button - Mobile Only - Always visible except checkout */}
+          {!pathname.startsWith('/checkout') && !pathname.startsWith('/checkout-test') && (
+            (pathname === '/' || pathname === '/healthy') ? (
+              <button 
+                type="button"
+                className="floating-cart-btn"
+                data-bs-toggle="modal"
+                data-bs-target="#cartModal"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Floating cart clicked on:', pathname);
+                  
+                  // Manually trigger modal if Bootstrap is loaded
+                  const modalEl = document.getElementById('cartModal');
+                  if (modalEl && (window as any).bootstrap?.Modal) {
+                    try {
+                      const modalInstance = (window as any).bootstrap.Modal.getOrCreateInstance(modalEl);
+                      modalInstance.show();
+                    } catch (error) {
+                      console.error('Error opening modal:', error);
+                    }
                   }
-                }
-              }}
-            >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-                <circle cx="9" cy="21" r="1"></circle>
-                <circle cx="20" cy="21" r="1"></circle>
-                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-              </svg>
-              {totalItems > 0 && <span className="floating-cart-badge">{totalItems}</span>}
-            </button>
-          ) : (
-            <Link href="/" className="floating-cart-btn">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-                <circle cx="9" cy="21" r="1"></circle>
-                <circle cx="20" cy="21" r="1"></circle>
-                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-              </svg>
-              {totalItems > 0 && <span className="floating-cart-badge">{totalItems}</span>}
-            </Link>
-          ))}
+                }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                  <circle cx="9" cy="21" r="1"></circle>
+                  <circle cx="20" cy="21" r="1"></circle>
+                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                </svg>
+                {totalItems > 0 && <span className="floating-cart-badge">{totalItems}</span>}
+              </button>
+            ) : (
+              <Link href="/" className="floating-cart-btn">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                  <circle cx="9" cy="21" r="1"></circle>
+                  <circle cx="20" cy="21" r="1"></circle>
+                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                </svg>
+                {totalItems > 0 && <span className="floating-cart-badge">{totalItems}</span>}
+              </Link>
+            )
+          )}
         </>
       )}
     </header>

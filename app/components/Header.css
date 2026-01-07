@@ -666,7 +666,6 @@
 
 /* Floating Cart Button */
 .floating-cart-btn {
-  display: none;
   position: fixed;
   bottom: 90px;
   right: 20px;
@@ -679,18 +678,14 @@
   cursor: pointer;
   z-index: 998;
   transition: all 0.3s ease;
+  display: none;
   align-items: center;
   justify-content: center;
 }
 
 @media (max-width: 768px) {
   .floating-cart-btn {
-    display: flex;
-  }
-  
-  /* Hide floating cart on checkout page */
-  body:has([class*="checkout"]) .floating-cart-btn {
-    display: none !important;
+    display: flex !important;
   }
 }
 
