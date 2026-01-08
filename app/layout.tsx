@@ -36,6 +36,11 @@ export default function RootLayout({
 
   return (
     <html lang="en">
+      <head>
+        {/* Preconnect to API for faster product loading */}
+        <link rel="dns-prefetch" href={process.env.NEXT_PUBLIC_API_BASE_URL || 'https://the-quisine-app-backend.vercel.app'} />
+        <link rel="preconnect" href={process.env.NEXT_PUBLIC_API_BASE_URL || 'https://the-quisine-app-backend.vercel.app'} />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning={true}

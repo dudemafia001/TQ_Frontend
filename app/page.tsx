@@ -21,6 +21,7 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedVariants, setSelectedVariants] = useState<{[key: string]: string}>({});
   const [showLocationPrompt, setShowLocationPrompt] = useState(false);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
 
   const { addToCart: addToCartContext, updateQuantity, removeFromCart, cartItems, totalItems: cartTotalItems, subtotal } = useCart();
   const { userLocation, deliveryAvailable, setUserLocation, setDeliveryAvailable, clearLocation } = useLocation();
@@ -36,27 +37,13 @@ export default function Home() {
   ];
 
   useEffect(() => {
-    // ✅ Load Bootstrap only on client
-    import("bootstrap/dist/js/bootstrap.bundle.min.js")
-      .then((bootstrap: any) => {
-        console.log("✅ Bootstrap JS loaded");
-        const modalEl = document.getElementById("cartModal");
-        if (modalEl) {
-          new (bootstrap as any).Modal(modalEl);
-          console.log("✅ Bootstrap modal initialized");
-        }
-      })
-      .catch((err) => console.error("❌ Bootstrap JS failed", err));
-
+    // 🚀 PRIORITY: Fetch products immediately - no delays!
+    setIsLoadingProducts(true);
     fetch(buildApiUrl(config.api.endpoints.products))
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
-          console.log("Fetched products:", data.length);
-          const productWithImage = data.find(p => p.imageUrl);
-          if (productWithImage) {
-            console.log("Sample product with imageUrl:", JSON.stringify(productWithImage, null, 2));
-          }
+          console.log("✅ Products loaded:", data.length);
           // Store all products for cart display
           setAllProducts(data);
           // Filter out healthy items from main menu (case-insensitive)
@@ -64,26 +51,32 @@ export default function Home() {
             const category = p.category?.toLowerCase().trim() || "";
             return category !== "healthy";
           });
-          console.log("Regular products after filter:", regularProducts.length);
           setProducts(regularProducts);
           setSelectedCategory(""); // show all by default
         } else {
           console.error("Invalid data format:", data);
         }
       })
-      .catch((err) => console.error("Fetch error:", err));
+      .catch((err) => console.error("Fetch error:", err))
+      .finally(() => setIsLoadingProducts(false));
 
-    // Delay location prompt check to allow localStorage to load
-    const timer = setTimeout(() => {
-      if (!userLocation) {
-        setShowLocationPrompt(true);
-      }
-    }, 100);
+    // Load Bootstrap in parallel (non-blocking)
+    import("bootstrap/dist/js/bootstrap.bundle.min.js")
+      .then((bootstrap: any) => {
+        const modalEl = document.getElementById("cartModal");
+        if (modalEl) {
+          new (bootstrap as any).Modal(modalEl);
+        }
+      })
+      .catch((err) => console.error("❌ Bootstrap JS failed", err));
 
-    // Cleanup function to remove timer and modal backdrops when component unmounts
+    // Show location prompt immediately if no location set
+    if (!userLocation) {
+      setShowLocationPrompt(true);
+    }
+
+    // Cleanup function to remove modal backdrops when component unmounts
     return () => {
-      clearTimeout(timer);
-      
       // Remove any lingering modal backdrops
       const backdrops = document.querySelectorAll('.modal-backdrop');
       backdrops.forEach(backdrop => backdrop.remove());
@@ -232,7 +225,24 @@ export default function Home() {
 
           {/* Products Grid */}
           <div className="products-section">
-            {filteredProducts.length === 0 ? (
+            {isLoadingProducts ? (
+              <div className="products-grid">
+                {Array.from({ length: 8 }).map((_, idx) => (
+                  <div key={idx} className="menu-item-card" style={{ opacity: 0.6 }}>
+                    <div className="item-content">
+                      <div className="item-info">
+                        <div className="skeleton-loader" style={{ width: '60%', height: '24px', marginBottom: '8px' }}></div>
+                        <div className="skeleton-loader" style={{ width: '100%', height: '16px', marginBottom: '4px' }}></div>
+                        <div className="skeleton-loader" style={{ width: '80%', height: '16px' }}></div>
+                      </div>
+                      <div className="item-image-section">
+                        <div className="skeleton-loader" style={{ width: '120px', height: '120px', borderRadius: '8px' }}></div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : filteredProducts.length === 0 ? (
               <div className="empty-state">
                 <p>No items found in this category.</p>
               </div>
