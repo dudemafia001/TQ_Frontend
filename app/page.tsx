@@ -21,7 +21,8 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedVariants, setSelectedVariants] = useState<{[key: string]: string}>({});
   const [showLocationPrompt, setShowLocationPrompt] = useState(false);
-  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   const { addToCart: addToCartContext, updateQuantity, removeFromCart, cartItems, totalItems: cartTotalItems, subtotal } = useCart();
   const { userLocation, deliveryAvailable, setUserLocation, setDeliveryAvailable, clearLocation } = useLocation();
@@ -37,6 +38,8 @@ export default function Home() {
   ];
 
   useEffect(() => {
+    setIsMounted(true);
+    
     // 🚀 PRIORITY: Fetch products immediately - no delays!
     setIsLoadingProducts(true);
     fetch(buildApiUrl(config.api.endpoints.products))
@@ -225,7 +228,7 @@ export default function Home() {
 
           {/* Products Grid */}
           <div className="products-section">
-            {isLoadingProducts ? (
+            {!isMounted || isLoadingProducts ? (
               <div className="products-grid">
                 {Array.from({ length: 8 }).map((_, idx) => (
                   <div key={idx} className="menu-item-card" style={{ opacity: 0.6 }}>

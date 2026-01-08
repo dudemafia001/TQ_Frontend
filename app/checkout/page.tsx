@@ -42,6 +42,7 @@ interface Coupon {
   description: string;
   discount_type: 'percentage' | 'fixed';
   discount_value: number;
+  max_discount: number | null;
   min_order_value: number;
   valid_to: string;
 }
@@ -229,6 +230,7 @@ export default function CheckoutPage() {
             description: coupon.description,
             discount_type: (coupon.discount_type === 'percent' ? 'percentage' : 'fixed') as 'percentage' | 'fixed',
             discount_value: coupon.discount_value,
+            max_discount: coupon.max_discount,
             min_order_value: coupon.min_purchase_amount,
             valid_to: coupon.valid_to
           }));
@@ -349,9 +351,23 @@ export default function CheckoutPage() {
       return;
     }
 
-    const discount = coupon.discount_type === 'percentage' 
-      ? Math.min((subtotal * coupon.discount_value) / 100, subtotal * 0.5) // Max 50% discount
-      : Math.min(coupon.discount_value, subtotal); // Can't discount more than subtotal
+    // Calculate discount based on coupon type
+    let discount = 0;
+    if (coupon.discount_type === 'percentage') {
+      // Calculate percentage discount
+      discount = (subtotal * coupon.discount_value) / 100;
+      
+      // Apply max_discount cap if specified
+      if (coupon.max_discount && discount > coupon.max_discount) {
+        discount = coupon.max_discount;
+      }
+    } else {
+      // Fixed discount (flat amount)
+      discount = coupon.discount_value;
+    }
+    
+    // Ensure discount doesn't exceed subtotal
+    discount = Math.min(discount, subtotal);
 
     setAppliedCoupon(coupon);
     setCouponDiscount(discount);
