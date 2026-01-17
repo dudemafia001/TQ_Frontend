@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { CartContext } from '../contexts/CartContext';
 import { AuthContext } from '../contexts/AuthContext';
@@ -76,6 +76,8 @@ export default function CheckoutPage() {
   });
   
   const [manualAddress, setManualAddress] = useState<string>('');
+  const [addressError, setAddressError] = useState<boolean>(false);
+  const addressInputRef = useRef<HTMLTextAreaElement>(null);
 
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -407,9 +409,13 @@ export default function CheckoutPage() {
 
     // Validate address
     if (!manualAddress || manualAddress.trim() === '') {
+      setAddressError(true);
+      addressInputRef.current?.focus();
+      addressInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       alert('Please enter your complete delivery address');
       return;
     }
+    setAddressError(false);
 
     // Validate location is set
     if (!userLocation || !userLocation.lat || !userLocation.lng) {
@@ -754,25 +760,32 @@ export default function CheckoutPage() {
                   Complete Address <span style={{ color: 'red' }}>*</span> (House No., Street, Landmark)
                 </label>
                 <textarea
+                  ref={addressInputRef}
                   id="manual-address"
                   value={manualAddress}
-                  onChange={(e) => setManualAddress(e.target.value)}
+                  onChange={(e) => {
+                    setManualAddress(e.target.value);
+                    if (e.target.value.trim() !== '') {
+                      setAddressError(false);
+                    }
+                  }}
                   placeholder="Enter your complete delivery address with house number, street name, and landmark"
                   rows={3}
                   required
                   style={{
                     width: '100%',
                     padding: '12px',
-                    border: manualAddress.trim() === '' ? '1px solid #ff6b6b' : '1px solid #ddd',
+                    border: addressError || manualAddress.trim() === '' ? '2px solid #ff6b6b' : '1px solid #ddd',
                     borderRadius: '8px',
                     fontSize: '14px',
                     fontFamily: 'inherit',
                     resize: 'vertical',
-                    minHeight: '80px'
+                    minHeight: '80px',
+                    outline: addressError ? 'none' : undefined
                   }}
                 />
-                <p style={{ fontSize: '12px', color: manualAddress.trim() === '' ? '#ff6b6b' : '#666', marginTop: '5px' }}>
-                  {manualAddress.trim() === '' ? '⚠️ This field is required for delivery' : 'This will be used as your delivery address'}
+                <p style={{ fontSize: '12px', color: addressError || manualAddress.trim() === '' ? '#ff6b6b' : '#666', marginTop: '5px', fontWeight: addressError ? '500' : 'normal' }}>
+                  {addressError || manualAddress.trim() === '' ? '⚠️ Enter the full address in the field above' : 'This will be used as your delivery address'}
                 </p>
               </div>
             </div>
@@ -839,9 +852,13 @@ export default function CheckoutPage() {
                     return;
                   }
                   if (!manualAddress || manualAddress.trim() === '') {
+                    setAddressError(true);
+                    addressInputRef.current?.focus();
+                    addressInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     alert('Please enter your complete delivery address');
                     return;
                   }
+                  setAddressError(false);
                   if (!userLocation || !userLocation.lat || !userLocation.lng) {
                     alert('Please select your delivery location first');
                     setShowLocationModal(true);
@@ -1045,9 +1062,13 @@ export default function CheckoutPage() {
                 return;
               }
               if (!manualAddress || manualAddress.trim() === '') {
+                setAddressError(true);
+                addressInputRef.current?.focus();
+                addressInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 alert('Please enter your complete delivery address');
                 return;
               }
+              setAddressError(false);
               if (!userLocation || !userLocation.lat || !userLocation.lng) {
                 alert('Please select your delivery location first');
                 setShowLocationModal(true);
@@ -1170,9 +1191,13 @@ export default function CheckoutPage() {
                 className="mobile-payment-btn"
                 onClick={() => {
                   if (!manualAddress || manualAddress.trim() === '') {
+                    setAddressError(true);
+                    addressInputRef.current?.focus();
+                    addressInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     alert('Please enter your complete delivery address');
                     return;
                   }
+                  setAddressError(false);
                   handlePlaceOrder();
                 }}
                 disabled={isProcessingPayment || (paymentMethod === 'cash' && !isEligibleForCash)}
