@@ -19,6 +19,7 @@ export default function Home() {
   const [products, setProducts] = useState<any[]>([]);
   const [allProducts, setAllProducts] = useState<any[]>([]); // Store all products for cart display
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedVariants, setSelectedVariants] = useState<{[key: string]: string}>({});
   const [showLocationPrompt, setShowLocationPrompt] = useState(false);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
@@ -93,13 +94,21 @@ export default function Home() {
 
   const categories = [...new Set(products.map((p: any) => p.category.trim()))];
 
-  const filteredProducts = selectedCategory
-    ? products.filter(
-        (p: any) =>
-          p.category.toLowerCase().trim() ===
-          selectedCategory.toLowerCase().trim()
-      )
-    : products;
+  const filteredProducts = products.filter((p: any) => {
+    // Filter by category
+    const matchesCategory = selectedCategory
+      ? p.category.toLowerCase().trim() === selectedCategory.toLowerCase().trim()
+      : true;
+    
+    // Filter by search query
+    const matchesSearch = searchQuery
+      ? p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.category.toLowerCase().includes(searchQuery.toLowerCase())
+      : true;
+    
+    return matchesCategory && matchesSearch;
+  });
 
   // Helper function to get quantity for a specific product+variant
   const getItemQuantity = (productId: string, variant: string) => {
@@ -226,6 +235,91 @@ export default function Home() {
             </div>
           </div>
 
+          {/* Search Input */}
+          <div className="search-section" style={{ 
+            padding: '20px 0',
+            margin: '0 auto',
+            maxWidth: '100%'
+          }}>
+            <div className="search-input-wrapper" style={{ 
+              position: 'relative',
+              maxWidth: '600px',
+              margin: '0 auto',
+              padding: '0 15px'
+            }}>
+              <span style={{
+                position: 'absolute',
+                left: '30px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                fontSize: '18px',
+                color: '#666',
+                zIndex: 1
+              }}>🔍</span>
+              <input
+                type="text"
+                placeholder="Search for dishes, categories..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="search-input"
+                style={{
+                  width: '100%',
+                  padding: '14px 50px',
+                  border: '2px solid #e2e8f0',
+                  borderRadius: '12px',
+                  fontSize: '15px',
+                  outline: 'none',
+                  transition: 'all 0.3s ease',
+                  fontFamily: 'inherit',
+                  backgroundColor: '#fff',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#ff6b6b';
+                  e.target.style.boxShadow = '0 4px 12px rgba(255, 107, 107, 0.2)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#e2e8f0';
+                  e.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.05)';
+                }}
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  style={{
+                    position: 'absolute',
+                    right: '30px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: '#f7fafc',
+                    border: 'none',
+                    fontSize: '18px',
+                    color: '#999',
+                    cursor: 'pointer',
+                    padding: '4px 8px',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '24px',
+                    height: '24px',
+                    zIndex: 1
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#e2e8f0';
+                    e.currentTarget.style.color = '#333';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = '#f7fafc';
+                    e.currentTarget.style.color = '#999';
+                  }}
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          </div>
+
           {/* Products Grid */}
           <div className="products-section">
             {!isMounted || isLoadingProducts ? (
@@ -247,7 +341,24 @@ export default function Home() {
               </div>
             ) : filteredProducts.length === 0 ? (
               <div className="empty-state">
-                <p>No items found in this category.</p>
+                <p>{searchQuery ? `No items found matching "${searchQuery}"` : 'No items found in this category.'}</p>
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    style={{
+                      marginTop: '10px',
+                      padding: '8px 20px',
+                      background: '#ff6b6b',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '20px',
+                      cursor: 'pointer',
+                      fontSize: '14px'
+                    }}
+                  >
+                    Clear Search
+                  </button>
+                )}
               </div>
             ) : (
               <div className="products-grid">
