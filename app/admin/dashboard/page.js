@@ -44,7 +44,7 @@ export default function AdminDashboard() {
     isOpen: true, 
     closedMessage: '', 
     reopenTime: null,
-    operatingHoursEnabled: true,
+    operatingHoursEnabled: false, // Changed to false - disabled by default
     operatingHours: { start: '12:00', end: '23:00' },
     outsideHoursMessage: ''
   });
@@ -52,7 +52,7 @@ export default function AdminDashboard() {
   const [tempReopenTime, setTempReopenTime] = useState('');
   const [tempOperatingHours, setTempOperatingHours] = useState({ start: '12:00', end: '23:00' });
   const [tempOutsideHoursMessage, setTempOutsideHoursMessage] = useState('');
-  const [operatingHoursEnabled, setOperatingHoursEnabled] = useState(true);
+  const [operatingHoursEnabled, setOperatingHoursEnabled] = useState(false); // Changed to false - disabled by default
 
   // Products section state
   const [products, setProducts] = useState([]);
@@ -1177,69 +1177,46 @@ export default function AdminDashboard() {
             <div className="section-header">
               <h2 className="section-title">Site Status Control</h2>
             </div>
-            <div style={{ padding: '2rem' }}>
-              <div style={{ background: 'white', padding: '2rem', borderRadius: '8px', maxWidth: '600px' }}>
+            <div style={{ padding: '2rem', maxWidth: '800px' }}>
+              
+              {/* Full Day Closure Section */}
+              <div style={{ 
+                background: 'linear-gradient(135deg, #fff5e6 0%, #ffe8cc 100%)',
+                padding: '2rem',
+                borderRadius: '12px',
+                marginBottom: '2rem',
+                border: '2px solid #ffa500',
+                boxShadow: '0 2px 8px rgba(255, 165, 0, 0.15)'
+              }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
-                  <div style={{ fontSize: '2rem' }}>{siteStatus.isOpen ? '✅' : '🚫'}</div>
-                  <h3 style={{ margin: 0 }}>Status: {siteStatus.isOpen ? 'Open' : 'Closed'}</h3>
+                  <div style={{ fontSize: '2.5rem' }}>{siteStatus.isOpen ? '✅' : '🚫'}</div>
+                  <div>
+                    <h3 style={{ margin: 0, color: '#d97706', fontSize: '1.5rem' }}>Full Day Closure</h3>
+                    <p style={{ margin: '0.25rem 0 0 0', color: '#92400e', fontSize: '0.9rem' }}>
+                      For special occasions (holidays, maintenance, etc.)
+                    </p>
+                  </div>
                 </div>
                 
                 <div style={{ marginBottom: '1.5rem' }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
-                    Message when closed:
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#92400e' }}>
+                    Closure Message:
                   </label>
                   <textarea
                     value={tempMessage}
                     onChange={(e) => setTempMessage(e.target.value)}
-                    placeholder="Enter message to show when site is closed..."
+                    placeholder="Example: We are closed for a special occasion. We'll be back soon!"
                     style={{ 
                       width: '100%', 
                       padding: '0.75rem', 
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '6px',
+                      border: '2px solid #fbbf24',
+                      borderRadius: '8px',
                       minHeight: '100px',
-                      fontFamily: 'inherit'
-                    }}
-                  />
-                </div>
-
-                <div style={{ marginBottom: '1.5rem' }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
-                    ⏰ Reopen Date & Time (Optional):
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={tempReopenTime}
-                    onChange={(e) => setTempReopenTime(e.target.value)}
-                    style={{ 
-                      width: '100%', 
-                      padding: '0.75rem', 
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '6px',
+                      fontFamily: 'inherit',
                       fontSize: '1rem',
-                      fontFamily: 'inherit'
+                      backgroundColor: 'white'
                     }}
                   />
-                  <small style={{ color: '#718096', fontSize: '0.875rem', marginTop: '0.5rem', display: 'block' }}>
-                    Set when the site will automatically reopen. Leave empty for no timer.
-                  </small>
-                  {tempReopenTime && (
-                    <button
-                      onClick={() => setTempReopenTime('')}
-                      style={{
-                        marginTop: '0.5rem',
-                        padding: '0.5rem 1rem',
-                        backgroundColor: '#e2e8f0',
-                        color: '#2d3748',
-                        border: 'none',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        fontSize: '0.875rem'
-                      }}
-                    >
-                      Clear Timer
-                    </button>
-                  )}
                 </div>
 
                 <div style={{ display: 'flex', gap: '1rem' }}>
@@ -1248,166 +1225,172 @@ export default function AdminDashboard() {
                     disabled={!siteStatus.isOpen}
                     style={{
                       flex: 1,
-                      padding: '0.75rem',
-                      backgroundColor: !siteStatus.isOpen ? '#cbd5e0' : '#e53e3e',
+                      padding: '1rem',
+                      backgroundColor: !siteStatus.isOpen ? '#d1d5db' : '#dc2626',
                       color: 'white',
                       border: 'none',
-                      borderRadius: '6px',
-                      fontWeight: '600',
-                      cursor: siteStatus.isOpen ? 'pointer' : 'not-allowed'
+                      borderRadius: '8px',
+                      fontWeight: '700',
+                      cursor: siteStatus.isOpen ? 'pointer' : 'not-allowed',
+                      fontSize: '1rem',
+                      boxShadow: siteStatus.isOpen ? '0 2px 4px rgba(220, 38, 38, 0.3)' : 'none',
+                      transition: 'all 0.2s'
                     }}
                   >
-                    � Close Site
+                    🚫 Close Site
                   </button>
                   <button
                     onClick={() => updateSiteStatus(true)}
                     disabled={siteStatus.isOpen}
                     style={{
                       flex: 1,
-                      padding: '0.75rem',
-                      backgroundColor: siteStatus.isOpen ? '#cbd5e0' : '#48bb78',
+                      padding: '1rem',
+                      backgroundColor: siteStatus.isOpen ? '#d1d5db' : '#16a34a',
                       color: 'white',
                       border: 'none',
-                      borderRadius: '6px',
-                      fontWeight: '600',
-                      cursor: !siteStatus.isOpen ? 'pointer' : 'not-allowed'
+                      borderRadius: '8px',
+                      fontWeight: '700',
+                      cursor: !siteStatus.isOpen ? 'pointer' : 'not-allowed',
+                      fontSize: '1rem',
+                      boxShadow: !siteStatus.isOpen ? '0 2px 4px rgba(22, 163, 74, 0.3)' : 'none',
+                      transition: 'all 0.2s'
                     }}
                   >
                     ✅ Open Site
                   </button>
                 </div>
-                
-                {/* Operating Hours Section */}
-                <div style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '2px solid #e2e8f0' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
-                    <div style={{ fontSize: '2rem' }}>⏰</div>
-                    <h3 style={{ margin: 0 }}>Operating Hours Control</h3>
+              </div>
+              
+              {/* Daily Operating Hours Section */}
+              <div style={{ 
+                background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)',
+                padding: '2rem',
+                borderRadius: '12px',
+                marginBottom: '2rem',
+                border: '2px solid #10b981',
+                boxShadow: '0 2px 8px rgba(16, 185, 129, 0.15)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+                  <div style={{ fontSize: '2.5rem' }}>⏰</div>
+                  <div>
+                    <h3 style={{ margin: 0, color: '#047857', fontSize: '1.5rem' }}>Daily Operating Hours</h3>
+                    <p style={{ margin: '0.25rem 0 0 0', color: '#065f46', fontSize: '0.9rem' }}>
+                      Set your regular business hours
+                    </p>
                   </div>
+                </div>
 
-                  <div style={{ marginBottom: '1.5rem' }}>
-                    <label style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '0.75rem',
-                      padding: '1rem',
-                      backgroundColor: '#f7fafc',
-                      borderRadius: '6px',
-                      cursor: 'pointer'
-                    }}>
-                      <input
-                        type="checkbox"
-                        checked={operatingHoursEnabled}
-                        onChange={(e) => setOperatingHoursEnabled(e.target.checked)}
-                        style={{ width: '20px', height: '20px', cursor: 'pointer' }}
-                      />
-                      <span style={{ fontWeight: '600', fontSize: '1rem' }}>
-                        Enable Operating Hours Restrictions
-                      </span>
-                    </label>
-                    <small style={{ color: '#718096', fontSize: '0.875rem', marginTop: '0.5rem', display: 'block', marginLeft: '0.5rem' }}>
-                      When enabled, orders will only be accepted during specified hours
-                    </small>
-                  </div>
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <label style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '0.75rem',
+                    padding: '1rem',
+                    backgroundColor: 'white',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    border: '2px solid #6ee7b7'
+                  }}>
+                    <input
+                      type="checkbox"
+                      checked={operatingHoursEnabled}
+                      onChange={(e) => setOperatingHoursEnabled(e.target.checked)}
+                      style={{ width: '22px', height: '22px', cursor: 'pointer', accentColor: '#10b981' }}
+                    />
+                    <span style={{ fontWeight: '700', fontSize: '1rem', color: '#065f46' }}>
+                      Enable Time Restrictions
+                    </span>
+                  </label>
+                </div>
 
-                  {operatingHoursEnabled && (
-                    <>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
-                        <div>
-                          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
-                            🌅 Start Time:
-                          </label>
-                          <input
-                            type="time"
-                            value={tempOperatingHours.start}
-                            onChange={(e) => setTempOperatingHours({ ...tempOperatingHours, start: e.target.value })}
-                            style={{ 
-                              width: '100%', 
-                              padding: '0.75rem', 
-                              border: '1px solid #e2e8f0',
-                              borderRadius: '6px',
-                              fontSize: '1rem',
-                              fontFamily: 'inherit'
-                            }}
-                          />
-                        </div>
-                        <div>
-                          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
-                            🌙 End Time:
-                          </label>
-                          <input
-                            type="time"
-                            value={tempOperatingHours.end}
-                            onChange={(e) => setTempOperatingHours({ ...tempOperatingHours, end: e.target.value })}
-                            style={{ 
-                              width: '100%', 
-                              padding: '0.75rem', 
-                              border: '1px solid #e2e8f0',
-                              borderRadius: '6px',
-                              fontSize: '1rem',
-                              fontFamily: 'inherit'
-                            }}
-                          />
-                        </div>
-                      </div>
-
-                      <div style={{ 
-                        padding: '1rem', 
-                        backgroundColor: '#edf2f7', 
-                        borderRadius: '6px',
-                        marginBottom: '1.5rem'
-                      }}>
-                        <strong>Current Setting:</strong> Orders accepted from{' '}
-                        <span style={{ color: '#2b6cb0', fontWeight: 'bold' }}>
-                          {tempOperatingHours.start}
-                        </span>
-                        {' '}to{' '}
-                        <span style={{ color: '#2b6cb0', fontWeight: 'bold' }}>
-                          {tempOperatingHours.end}
-                        </span>
-                      </div>
-
-                      <div style={{ marginBottom: '1.5rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
-                          Message when outside operating hours:
+                {operatingHoursEnabled && (
+                  <>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#065f46' }}>
+                          Start Time:
                         </label>
-                        <textarea
-                          value={tempOutsideHoursMessage}
-                          onChange={(e) => setTempOutsideHoursMessage(e.target.value)}
-                          placeholder="We accept orders only between 12:00 PM to 11:00 PM. Please visit us during our operating hours!"
+                        <input
+                          type="time"
+                          value={tempOperatingHours.start}
+                          onChange={(e) => setTempOperatingHours({ ...tempOperatingHours, start: e.target.value })}
                           style={{ 
                             width: '100%', 
                             padding: '0.75rem', 
-                            border: '1px solid #e2e8f0',
-                            borderRadius: '6px',
-                            minHeight: '100px',
-                            fontFamily: 'inherit'
+                            border: '2px solid #6ee7b7',
+                            borderRadius: '8px',
+                            fontSize: '1rem',
+                            fontFamily: 'inherit',
+                            backgroundColor: 'white'
                           }}
                         />
-                        <small style={{ color: '#718096', fontSize: '0.875rem', marginTop: '0.5rem', display: 'block' }}>
-                          This message will be shown to users trying to order outside operating hours
-                        </small>
                       </div>
-                    </>
-                  )}
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#065f46' }}>
+                          End Time:
+                        </label>
+                        <input
+                          type="time"
+                          value={tempOperatingHours.end}
+                          onChange={(e) => setTempOperatingHours({ ...tempOperatingHours, end: e.target.value })}
+                          style={{ 
+                            width: '100%', 
+                            padding: '0.75rem', 
+                            border: '2px solid #6ee7b7',
+                            borderRadius: '8px',
+                            fontSize: '1rem',
+                            fontFamily: 'inherit',
+                            backgroundColor: 'white'
+                          }}
+                        />
+                      </div>
+                    </div>
 
-                  <button
-                    onClick={() => updateSiteStatus(siteStatus.isOpen)}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      backgroundColor: '#3182ce',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '6px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      fontSize: '1rem'
-                    }}
-                  >
-                    💾 Save All Settings
-                  </button>
-                </div>
+                    <div style={{ marginBottom: '1.5rem' }}>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#065f46' }}>
+                        Outside Hours Message:
+                      </label>
+                      <textarea
+                        value={tempOutsideHoursMessage}
+                        onChange={(e) => setTempOutsideHoursMessage(e.target.value)}
+                        placeholder="Example: We accept orders only between 12:00 PM to 11:00 PM. Please visit us during our operating hours!"
+                        style={{ 
+                          width: '100%', 
+                          padding: '0.75rem', 
+                          border: '2px solid #6ee7b7',
+                          borderRadius: '8px',
+                          minHeight: '100px',
+                          fontFamily: 'inherit',
+                          fontSize: '1rem',
+                          backgroundColor: 'white'
+                        }}
+                      />
+                    </div>
+                  </>
+                )}
               </div>
+
+              {/* Save Button */}
+              <button
+                onClick={() => updateSiteStatus(siteStatus.isOpen)}
+                style={{
+                  width: '100%',
+                  padding: '1.25rem',
+                  backgroundColor: '#2563eb',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  fontSize: '1.1rem',
+                  boxShadow: '0 4px 6px rgba(37, 99, 235, 0.3)',
+                  transition: 'all 0.2s'
+                }}
+                onMouseOver={(e) => e.target.style.backgroundColor = '#1d4ed8'}
+                onMouseOut={(e) => e.target.style.backgroundColor = '#2563eb'}
+              >
+                💾 Save All Settings
+              </button>
             </div>
           </div>
         )}
