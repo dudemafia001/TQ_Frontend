@@ -403,7 +403,7 @@ export default function CheckoutPage() {
 
     // Validate delivery availability
     if (!deliveryInfo.available) {
-      alert('⚠️ Delivery not available at your location. We only deliver within 6km radius.');
+      alert('⚠️ Delivery not available at your location. We only deliver within 7km radius.');
       return;
     }
 
@@ -864,7 +864,7 @@ export default function CheckoutPage() {
                   }
                   
                   if (!deliveryInfo.available) {
-                    alert('⚠️ Delivery not available at your location. We only deliver within 6km radius. Please change your delivery address.');
+                    alert('⚠️ Delivery not available at your location. We only deliver within 7km radius. Please change your delivery address.');
                     setShowLocationModal(true);
                     return;
                   }
@@ -1074,7 +1074,7 @@ export default function CheckoutPage() {
               }
               
               if (!deliveryInfo.available) {
-                alert('⚠️ Delivery not available at your location. We only deliver within 6km radius. Please change your delivery address.');
+                alert('⚠️ Delivery not available at your location. We only deliver within 7km radius. Please change your delivery address.');
                 setShowLocationModal(true);
                 return;
               }

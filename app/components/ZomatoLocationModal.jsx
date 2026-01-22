@@ -3,11 +3,11 @@ import { useState, useEffect, useRef } from "react";
 import "./ZomatoLocationModal.css";
 
 const DELIVERY_CENTER = {
-  lat: 26.4201563,
-  lng: 80.3600507
+  lat: 26.420157668819858,
+  lng: 80.36262485130308
 };
 
-const DELIVERY_RADIUS_KM = 6;
+const DELIVERY_RADIUS_KM = 7;
 
 export default function LocationModal({ isOpen, onClose, onLocationSet }) {
   const [searchQuery, setSearchQuery] = useState("");
