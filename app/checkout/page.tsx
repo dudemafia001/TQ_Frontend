@@ -491,6 +491,15 @@ export default function CheckoutPage() {
             const verifyResult = await verifyResponse.json();
             if (verifyResult.success) {
               console.log('Order saved successfully');
+              
+              // Track Purchase event with Meta Pixel
+              if (typeof window !== 'undefined' && (window as any).fbq) {
+                (window as any).fbq('track', 'Purchase', {
+                  value: finalTotal,
+                  currency: 'INR'
+                });
+              }
+              
               router.push('/checkout/success');
             } else {
               throw new Error(verifyResult.message || 'Payment verification failed');
@@ -585,6 +594,14 @@ export default function CheckoutPage() {
 
       const result = await response.json();
       if (result.success) {
+        // Track Purchase event with Meta Pixel
+        if (typeof window !== 'undefined' && (window as any).fbq) {
+          (window as any).fbq('track', 'Purchase', {
+            value: finalTotal,
+            currency: 'INR'
+          });
+        }
+        
         router.push('/checkout/success');
       } else {
         alert(result.message || 'Failed to place cash order');

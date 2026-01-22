@@ -72,6 +72,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       return [...prev, { id, quantity: 1, name, variant, price }];
     });
+    
+    // Track AddToCart event with Meta Pixel
+    if (typeof window !== 'undefined' && (window as any).fbq && price) {
+      (window as any).fbq('track', 'AddToCart', {
+        currency: 'INR',
+        value: price
+      });
+    }
   }, []);
 
   const removeFromCart = useCallback((id: string) => {

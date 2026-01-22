@@ -57,6 +57,11 @@ export default function Home() {
           });
           setProducts(regularProducts);
           setSelectedCategory(""); // show all by default
+          
+          // Track ViewContent event when products load
+          if (typeof window !== 'undefined' && (window as any).fbq) {
+            (window as any).fbq('track', 'ViewContent');
+          }
         } else {
           console.error("Invalid data format:", data);
         }
