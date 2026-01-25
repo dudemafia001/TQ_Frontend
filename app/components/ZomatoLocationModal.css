@@ -9,23 +9,24 @@
   z-index: 10000;
   display: flex;
   align-items: flex-end;
-  padding: 0 16px 20px 16px; /* Left, Right, and Bottom padding for visibility */
+  padding: 0;
   box-sizing: border-box;
 }
 
 .zomato-location-modal {
   background: white;
   width: 100%;
-  height: calc(100vh - 40px); /* Adjust for bottom padding */
-  max-height: 90vh; /* Ensure it doesn't exceed 90% of viewport */
-  border-radius: 16px;
+  height: auto; /* Auto height - adapts to content */
+  max-height: 85vh;
+  border-radius: 16px 16px 0 0;
   display: flex;
   flex-direction: column;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   animation: slideUp 0.3s ease-out;
-  overflow: hidden; /* Prevent content overflow */
-  padding: 20px; /* Direct internal padding */
-  box-sizing: border-box; /* Include padding in width calculation */
+  overflow: hidden;
+  padding: 0;
+  box-sizing: border-box;
+  position: relative;
 }
 
 @keyframes slideUp {
@@ -37,14 +38,42 @@
   }
 }
 
+/* Draggable Handle for Mobile */
+.modal-drag-handle {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 4px;
+  background-color: #d1d5db;
+  border-radius: 2px;
+  cursor: grab;
+  z-index: 1;
+}
+
+.modal-drag-handle:active {
+  cursor: grabbing;
+}
+
 /* Header */
 .zomato-modal-header {
   display: flex;
   align-items: center;
-  padding: 16px 0px;
+  justify-content: space-between;
+  padding: 20px 20px 16px 20px;
   border-bottom: 1px solid #eee;
   background: white;
   border-radius: 16px 16px 0 0;
+  flex-shrink: 0;
+}
+
+.zomato-modal-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  flex: 1;
 }
 
 .back-button {
@@ -85,25 +114,35 @@
   transform: scale(1.1);
 }
 
-.zomato-modal-header h2 {
-  margin: 0;
-  font-size: 18px;
+/* Delivery Tab Container */
+.delivery-tab-container {
+  display: flex;
+  background: white;
+  border-bottom: 1px solid #eee;
+  flex-shrink: 0;
+}
+
+.delivery-tab {
+  flex: 1;
+  padding: 16px 20px;
+  text-align: center;
+  font-size: 16px;
   font-weight: 600;
   color: #333;
-  flex: 1;
+  border-bottom: 3px solid #ff6b35;
+  cursor: default;
+  background: white;
 }
 
 /* Restaurant Location Info */
 .restaurant-location-info {
-  padding: 16px 0px;
+  padding: 16px 20px;
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   border-bottom: 1px solid #dee2e6;
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: 0 -20px; /* Extend to edges */
-  padding-left: 20px;
-  padding-right: 20px;
+  flex-shrink: 0;
 }
 
 .restaurant-icon {
@@ -139,10 +178,11 @@
 
 /* Search Section */
 .search-section {
-  padding: 16px 0px;
+  padding: 16px 20px;
   background: white;
   border-bottom: 1px solid #eee;
   position: relative;
+  flex-shrink: 0;
 }
 
 .search-input-container {
@@ -248,7 +288,7 @@
   border-radius: 12px;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
   z-index: 1000;
-  max-height: 300px;
+  max-height: 50vh; /* Extended to 50% of viewport height */
   overflow-y: auto;
 }
 
@@ -399,9 +439,7 @@
 
 /* Map Container */
 .map-container {
-  flex: 1;
-  position: relative;
-  background: #f5f5f5;
+  display: none; /* Map removed - not needed */
 }
 
 .map {
@@ -464,6 +502,7 @@
   background: white;
   border-top: 1px solid #eee;
   flex-shrink: 0;
+  padding: 0 20px; /* Add horizontal padding */
 }
 
 /* Selected Address - Compact Single Line */
@@ -471,11 +510,11 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px 20px;
+  padding: 14px 16px;
   border: 1px solid #e0e0e0;
   background: #fafafa;
-  margin: 10px 0px; /* 10px outer padding */
-  border-radius: 12px; /* Rounded corners */
+  margin: 12px 0; /* Vertical margin */
+  border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
@@ -642,31 +681,44 @@
 
 /* Modal Actions */
 .modal-actions {
-  padding: 16px 0px 0px 0px;
+  padding: 16px 20px 20px 20px;
   background: white;
   border-top: 1px solid #eee;
+  flex-shrink: 0;
+  position: sticky;
+  bottom: 0;
+  margin-top: auto;
+  z-index: 10;
 }
 
 .save-address-btn {
   width: 100%;
+  max-width: 400px; /* Limit button width */
+  margin: 0 auto; /* Center the button */
+  display: block;
   background: #28a745;
   color: white;
   border: none;
-  padding: 16px;
-  border-radius: 12px;
-  font-size: 16px;
+  padding: 12px 24px; /* Smaller padding */
+  border-radius: 8px; /* Slightly smaller radius */
+  font-size: 15px; /* Slightly smaller font */
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.2);
 }
 
 .save-address-btn:hover:not(:disabled) {
   background: #218838;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
 }
 
 .save-address-btn:disabled {
   background: #6c757d;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 /* Desktop Styles */
@@ -678,9 +730,10 @@
 
   .zomato-location-modal {
     width: 90%;
-    max-width: 900px;
-    height: 80vh;
-    border-radius: 16px;
+    max-width: 600px; /* Smaller width for better desktop view */
+    height: auto;
+    max-height: 70vh; /* Better height for desktop */
+    border-radius: 16px; /* Rounded on all sides for desktop */
     animation: fadeIn 0.3s ease-out;
   }
 
@@ -697,6 +750,11 @@
 
   .zomato-modal-header {
     border-radius: 16px 16px 0 0;
+  }
+  
+  .modal-actions {
+    position: relative; /* Not sticky on desktop */
+    border-radius: 0 0 16px 16px; /* Rounded bottom corners on desktop */
   }
 
   .current-location-btn {
@@ -746,50 +804,102 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .zomato-location-modal-overlay {
-    padding: 0 12px 16px 12px; /* Smaller padding on mobile */
+  .zomato-location-modal {
+    height: auto; /* Auto height on tablets too */
+    max-height: 60vh; /* 60% on tablets */
+    border-radius: 20px 20px 0 0;
   }
   
-  .zomato-location-modal {
-    height: calc(100vh - 32px); /* Adjust for smaller padding */
-    max-height: 95vh; /* Allow more height on mobile */
-    border-radius: 12px; /* Smaller border radius on mobile */
-    padding: 16px; /* Smaller internal padding on tablets */
+  .zomato-modal-header {
+    padding: 24px 16px 12px 16px; /* More top padding for drag handle */
+  }
+  
+  .restaurant-location-info {
+    padding: 12px 16px;
+  }
+  
+  .search-section {
+    padding: 12px 16px;
+  }
+  
+  .modal-actions {
+    padding: 14px 16px 18px 16px;
   }
 }
 
 @media (max-width: 480px) {
-  .zomato-location-modal-overlay {
-    padding: 0 8px 12px 8px; /* Even smaller padding on very small screens */
-    padding-bottom: max(12px, env(safe-area-inset-bottom)); /* iOS safe area */
+  .zomato-location-modal {
+    height: 50vh; /* Fixed half screen height on mobile */
+    max-height: 50vh;
+    border-radius: 20px 20px 0 0;
   }
   
-  .zomato-location-modal {
-    height: calc(100vh - 24px);
-    height: calc(100vh - 24px - env(safe-area-inset-bottom)); /* Account for iOS safe area */
-    border-radius: 8px;
-    padding: 12px; /* Even smaller internal padding on mobile */
+  .zomato-modal-header {
+    padding: 24px 16px 12px 16px;
+  }
+  
+  .zomato-modal-header h2 {
+    font-size: 16px;
+  }
+  
+  .restaurant-location-info {
+    padding: 10px 16px;
+  }
+  
+  .restaurant-name {
+    font-size: 12px;
+  }
+  
+  .delivery-radius {
+    font-size: 11px;
+  }
+  
+  .search-section {
+    padding: 10px 16px;
+  }
+  
+  /* Make map more compact on mobile */
+  .map-container {
+    max-height: 250px; /* Limit map height on mobile */
+    min-height: 200px;
+  }
+  
+  /* Smaller button on mobile */
+  .save-address-btn {
+    max-width: 100%;
+    padding: 12px 20px;
+    font-size: 14px;
+  }
+  
+  .modal-actions {
+    padding: 12px 16px 16px 16px;
+  }
+  
+  .address-status-section {
+    padding: 0 16px;
+  }
+  
+  .selected-address-compact {
+    padding: 12px 14px;
+    margin: 10px 0;
+  }
+  
+  .address-text {
+    font-size: 13px;
+  }
+  
+  /* Make search results larger on mobile */
+  .search-results {
+    max-height: 60vh; /* Even larger on mobile - 60% of screen */
+    left: 16px;
+    right: 16px;
   }
 }
 
 /* iOS safe area support */
 @supports (padding: env(safe-area-inset-bottom)) {
-  .zomato-location-modal-overlay {
-    padding-bottom: max(20px, env(safe-area-inset-bottom));
-  }
-  
   .zomato-location-modal {
-    height: calc(100vh - 40px - env(safe-area-inset-bottom));
-  }
-  
-  @media (max-width: 768px) {
-    .zomato-location-modal-overlay {
-      padding-bottom: max(16px, env(safe-area-inset-bottom));
-    }
-    
-    .zomato-location-modal {
-      height: calc(100vh - 32px - env(safe-area-inset-bottom));
-    }
+    padding-bottom: env(safe-area-inset-bottom);
   }
 }
 

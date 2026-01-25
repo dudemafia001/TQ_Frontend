@@ -14,16 +14,17 @@ export default function LocationModal({ isOpen, onClose, onLocationSet }) {
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [map, setMap] = useState(null);
-  const [marker, setMarker] = useState(null);
   const [currentLocationLoading, setCurrentLocationLoading] = useState(false);
   const [deliveryStatus, setDeliveryStatus] = useState(null);
   const [showPopularLocalities, setShowPopularLocalities] = useState(false);
   
-  const mapRef = useRef(null);
   const searchInputRef = useRef(null);
   const autocompleteService = useRef(null);
-  const placesService = useRef(null);
+  const geocoder = useRef(null);
+  const modalRef = useRef(null);
+  const dragStartY = useRef(0);
+  const dragCurrentY = useRef(0);
+  const isDragging = useRef(false);
 
   // Popular localities in delivery areas
   const popularLocalities = [
@@ -37,142 +38,13 @@ export default function LocationModal({ isOpen, onClose, onLocationSet }) {
     { name: "Indirapuram, Ghaziabad", type: "🏙️ Popular Area", place_id: "indirapuram-ghaziabad" }
   ];
 
-  // Initialize Google Maps and services
-  const initializeMap = () => {
-    if (!window.google || !mapRef.current) return;
+  // Initialize Google Maps services (for search only, no map display)
+  const initializeServices = () => {
+    if (!window.google) return;
 
-    const mapOptions = {
-      zoom: 13,
-      center: DELIVERY_CENTER,
-      mapTypeControl: false,
-      streetViewControl: false,
-      fullscreenControl: false,
-      zoomControlOptions: {
-        position: window.google.maps.ControlPosition.RIGHT_CENTER
-      },
-      mapTypeId: window.google.maps.MapTypeId.ROADMAP,
-      styles: [
-        {
-          featureType: "poi",
-          elementType: "labels",
-          stylers: [{ visibility: "off" }]
-        }
-      ]
-    };
-
-    const newMap = new window.google.maps.Map(mapRef.current, mapOptions);
-    setMap(newMap);
-
-    // Initialize services
+    // Initialize autocomplete service for search
     autocompleteService.current = new window.google.maps.places.AutocompleteService();
-    placesService.current = new window.google.maps.places.PlacesService(newMap);
-
-    // Add delivery center marker
-    new window.google.maps.Marker({
-      position: DELIVERY_CENTER,
-      map: newMap,
-      title: "The Quisine - Delivery Center",
-      icon: {
-        url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-          <svg width="30" height="30" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="15" cy="15" r="12" fill="#ff6b35" stroke="white" stroke-width="3"/>
-            <circle cx="15" cy="15" r="5" fill="white"/>
-            <text x="15" y="18" text-anchor="middle" fill="#ff6b35" font-size="8" font-weight="bold">🏪</text>
-          </svg>
-        `),
-        scaledSize: new window.google.maps.Size(30, 30)
-      }
-    });
-
-    // Add delivery radius circle
-    new window.google.maps.Circle({
-      strokeColor: "#ff6b35",
-      strokeOpacity: 0.8,
-      strokeWeight: 2,
-      fillColor: "#ff6b35",
-      fillOpacity: 0.1,
-      map: newMap,
-      center: DELIVERY_CENTER,
-      radius: DELIVERY_RADIUS_KM * 1000, // Convert km to meters
-    });
-
-    // Add click listener for map
-    newMap.addListener('click', (event) => {
-      const clickedLocation = {
-        lat: event.latLng.lat(),
-        lng: event.latLng.lng()
-      };
-      
-      // Reverse geocode the clicked location
-      const geocoder = new window.google.maps.Geocoder();
-      geocoder.geocode({ location: clickedLocation }, (results, status) => {
-        if (status === 'OK' && results[0]) {
-          setLocationOnMap({
-            lat: clickedLocation.lat,
-            lng: clickedLocation.lng,
-            address: results[0].formatted_address,
-            place_id: results[0].place_id
-          });
-        }
-      });
-    });
-  };
-
-  // Set location on map
-  const setLocationOnMap = (location) => {
-    setSelectedAddress(location);
-    
-    if (map) {
-      // Remove existing marker
-      if (marker) {
-        marker.setMap(null);
-      }
-
-      // Add new marker
-      const newMarker = new window.google.maps.Marker({
-        position: { lat: location.lat, lng: location.lng },
-        map: map,
-        title: location.address,
-        draggable: true,
-        icon: {
-          url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-            <svg width="30" height="30" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="15" cy="15" r="12" fill="#00c851" stroke="white" stroke-width="3"/>
-              <circle cx="15" cy="15" r="5" fill="white"/>
-            </svg>
-          `),
-          scaledSize: new window.google.maps.Size(30, 30)
-        }
-      });
-
-      // Handle marker drag
-      newMarker.addListener('dragend', (event) => {
-        const newPosition = {
-          lat: event.latLng.lat(),
-          lng: event.latLng.lng()
-        };
-        
-        const geocoder = new window.google.maps.Geocoder();
-        geocoder.geocode({ location: newPosition }, (results, status) => {
-          if (status === 'OK' && results[0]) {
-            const updatedLocation = {
-              lat: newPosition.lat,
-              lng: newPosition.lng,
-              address: results[0].formatted_address,
-              place_id: results[0].place_id
-            };
-            setSelectedAddress(updatedLocation);
-            checkDeliveryAvailability(updatedLocation);
-          }
-        });
-      });
-
-      setMarker(newMarker);
-      map.panTo({ lat: location.lat, lng: location.lng });
-    }
-
-    // Check delivery availability
-    checkDeliveryAvailability(location);
+    geocoder.current = new window.google.maps.Geocoder();
   };
 
   // Check delivery availability using Google Distance Matrix API
@@ -428,21 +300,24 @@ export default function LocationModal({ isOpen, onClose, onLocationSet }) {
       return;
     }
     
-    if (!placesService.current) return;
+    if (!geocoder.current) return;
     
-    placesService.current.getDetails(
+    // Get place details using Geocoder
+    geocoder.current.geocode(
       { placeId: place.place_id },
-      (result, status) => {
-        if (status === window.google.maps.places.PlacesServiceStatus.OK) {
+      (results, status) => {
+        if (status === 'OK' && results[0]) {
           const location = {
-            lat: result.geometry.location.lat(),
-            lng: result.geometry.location.lng(),
-            address: result.formatted_address,
-            place_id: result.place_id
+            lat: results[0].geometry.location.lat(),
+            lng: results[0].geometry.location.lng(),
+            address: results[0].formatted_address,
+            place_id: results[0].place_id
           };
           
-          setLocationOnMap(location);
-          setSearchQuery(result.formatted_address);
+          // Set location without map
+          setSelectedAddress(location);
+          checkDeliveryAvailability(location);
+          setSearchQuery(results[0].formatted_address);
           setSearchResults([]);
           setShowPopularLocalities(false);
         }
@@ -462,8 +337,11 @@ export default function LocationModal({ isOpen, onClose, onLocationSet }) {
         };
         
         // Reverse geocode to get address
-        const geocoder = new window.google.maps.Geocoder();
-        geocoder.geocode({ location }, (results, status) => {
+        if (!geocoder.current) {
+          geocoder.current = new window.google.maps.Geocoder();
+        }
+        
+        geocoder.current.geocode({ location }, (results, status) => {
           setCurrentLocationLoading(false);
           if (status === 'OK' && results[0]) {
             const detectedLocation = {
@@ -472,7 +350,8 @@ export default function LocationModal({ isOpen, onClose, onLocationSet }) {
               address: results[0].formatted_address,
               place_id: results[0].place_id
             };
-            setLocationOnMap(detectedLocation);
+            setSelectedAddress(detectedLocation);
+            checkDeliveryAvailability(detectedLocation);
             setSearchQuery(detectedLocation.address);
           }
         });
@@ -508,13 +387,13 @@ export default function LocationModal({ isOpen, onClose, onLocationSet }) {
     }
   };
 
-  // Load Google Maps script
+  // Load Google Maps script (for search services only)
   useEffect(() => {
     if (isOpen && !window.google) {
       const script = document.createElement('script');
       script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places,geometry`;
       script.async = true;
-      script.onload = initializeMap;
+      script.onload = initializeServices;
       document.head.appendChild(script);
       
       return () => {
@@ -523,7 +402,7 @@ export default function LocationModal({ isOpen, onClose, onLocationSet }) {
         }
       };
     } else if (isOpen && window.google) {
-      setTimeout(initializeMap, 100);
+      setTimeout(initializeServices, 100);
     }
   }, [isOpen]);
 
@@ -549,29 +428,97 @@ export default function LocationModal({ isOpen, onClose, onLocationSet }) {
       setSelectedAddress(null);
       setSearchResults([]);
       setDeliveryStatus(null);
-      setMap(null);
-      setMarker(null);
     }
   }, [isOpen]);
+
+  // Drag to close functionality
+  const handleDragStart = (e) => {
+    const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+    dragStartY.current = clientY;
+    isDragging.current = true;
+    if (modalRef.current) {
+      modalRef.current.style.transition = 'none';
+    }
+  };
+
+  const handleDragMove = (e) => {
+    if (!isDragging.current) return;
+    
+    const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+    const deltaY = clientY - dragStartY.current;
+    
+    // Only allow dragging down
+    if (deltaY > 0 && modalRef.current) {
+      dragCurrentY.current = deltaY;
+      modalRef.current.style.transform = `translateY(${deltaY}px)`;
+    }
+  };
+
+  const handleDragEnd = () => {
+    if (!isDragging.current) return;
+    isDragging.current = false;
+    
+    if (modalRef.current) {
+      modalRef.current.style.transition = 'transform 0.3s ease-out';
+      
+      // If dragged down more than 100px, close the modal
+      if (dragCurrentY.current > 100) {
+        modalRef.current.style.transform = 'translateY(100%)';
+        setTimeout(() => {
+          onClose();
+        }, 300);
+      } else {
+        // Otherwise, snap back
+        modalRef.current.style.transform = 'translateY(0)';
+      }
+      
+      dragCurrentY.current = 0;
+    }
+  };
 
   if (!isOpen) return null;
 
   return (
-    <div className="zomato-location-modal-overlay">
-      <div className="zomato-location-modal">
+    <div 
+      className="zomato-location-modal-overlay"
+      onClick={(e) => {
+        // Close when clicking overlay
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <div 
+        ref={modalRef}
+        className="zomato-location-modal"
+      >
+        {/* Drag Handle */}
+        <div 
+          className="modal-drag-handle"
+          onMouseDown={handleDragStart}
+          onMouseMove={handleDragMove}
+          onMouseUp={handleDragEnd}
+          onMouseLeave={handleDragEnd}
+          onTouchStart={handleDragStart}
+          onTouchMove={handleDragMove}
+          onTouchEnd={handleDragEnd}
+        ></div>
+
         {/* Header */}
         <div className="zomato-modal-header">
-          <button className="back-button" onClick={onClose}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-          <h2>Select delivery location</h2>
-          <button className="close-button" onClick={onClose} title="Close without selecting location">
+          <h2>Choose a Location</h2>
+          <button className="close-button" onClick={onClose} title="Close">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
+        </div>
+
+        {/* Delivery Tab (Only) */}
+        <div className="delivery-tab-container">
+          <div className="delivery-tab active">
+            Delivery
+          </div>
         </div>
 
         {/* Restaurant Location Info */}
@@ -702,11 +649,6 @@ export default function LocationModal({ isOpen, onClose, onLocationSet }) {
               )}
             </div>
           )}
-        </div>
-
-        {/* Map Container */}
-        <div className="map-container">
-          <div ref={mapRef} className="map"></div>
         </div>
 
         {/* Selected Address and Delivery Status */}
