@@ -92,21 +92,34 @@ export default function CartModal() {
     if (!isAuthenticated || !user) {
       // Close modal before auth redirect
       const modal = document.getElementById('cartModal');
-      if (modal && typeof window !== 'undefined' && (window as any).bootstrap?.Modal) {
-        const modalInstance = (window as any).bootstrap.Modal.getInstance(modal);
-        if (modalInstance) {
-          modalInstance.hide();
+      if (modal) {
+        // Manual cleanup first
+        modal.classList.remove('show');
+        modal.style.display = 'none';
+        modal.setAttribute('aria-hidden', 'true');
+        modal.removeAttribute('aria-modal');
+        modal.removeAttribute('role');
+        
+        // Try Bootstrap method
+        if (typeof window !== 'undefined' && (window as any).bootstrap?.Modal) {
+          const modalInstance = (window as any).bootstrap.Modal.getInstance(modal);
+          if (modalInstance) {
+            modalInstance.hide();
+          }
         }
       }
       
+      // Clean up backdrops and body styles immediately
+      const backdrops = document.querySelectorAll('.modal-backdrop');
+      backdrops.forEach(backdrop => backdrop.remove());
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+      
+      // Navigate to auth page after cleanup
       setTimeout(() => {
-        const backdrops = document.querySelectorAll('.modal-backdrop');
-        backdrops.forEach(backdrop => backdrop.remove());
-        document.body.classList.remove('modal-open');
-        document.body.style.overflow = '';
-        document.body.style.paddingRight = '';
         router.push('/auth?redirect=checkout');
-      }, 300);
+      }, 100);
       return;
     }
     

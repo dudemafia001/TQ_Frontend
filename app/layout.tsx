@@ -10,6 +10,7 @@ import { AdminProvider } from "./contexts/AdminContext";
 import ConditionalHeader from "./components/ConditionalHeader";
 import SiteClosedModal from "./components/SiteClosedModal";
 import CartModal from "./components/CartModal";
+import WhatsAppButton from "./components/WhatsAppButton";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -145,6 +146,7 @@ export default function RootLayout({
                 <ConditionalHeader />
                 <SiteClosedModal />
                 <CartModal />
+                <WhatsAppButton />
                 {children}
               </LocationProvider>
             </CartProvider>
