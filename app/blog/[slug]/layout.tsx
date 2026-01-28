@@ -3,13 +3,14 @@ import { notFound } from 'next/navigation';
 import config, { buildApiUrl } from '../../../config/index';
 
 interface Props {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 // Generate dynamic metadata for each blog post
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
-    const response = await fetch(buildApiUrl(`/api/blog/public/${params.slug}`), {
+    const { slug } = await params;
+    const response = await fetch(buildApiUrl(`/api/blog/public/${slug}`), {
       cache: 'no-store'
     });
     
