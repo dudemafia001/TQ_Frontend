@@ -352,24 +352,29 @@ function AuthPageContent() {
         {/* Toggle Link */}
         <div className="text-center mt-3">
           {isSignup ? (
-            <p className="mb-0">
-              Already have an account?{" "}
-              <button
-                type="button"
-                className="btn btn-link p-0 fw-bold"
-                style={{ color: "#124f31", textDecoration: "underline" }}
-                onClick={() => {
-                  setIsSignup(false);
-                  setMobile("");
-                  setOtp("");
-                  setOtpSent(false);
-                  setOtpTimer(0);
-                  setMessage("");
-                }}
-              >
-                Sign in here
-              </button>
-            </p>
+            <>
+              <div className="alert alert-info text-center mb-3 p-2" style={{ fontSize: '0.9rem' }}>
+                Username, full name, mobile number, and password are required
+              </div>
+              <p className="mb-0">
+                Already have an account?{" "}
+                <button
+                  type="button"
+                  className="btn btn-link p-0 fw-bold"
+                  style={{ color: "#124f31", textDecoration: "underline" }}
+                  onClick={() => {
+                    setIsSignup(false);
+                    setMobile("");
+                    setOtp("");
+                    setOtpSent(false);
+                    setOtpTimer(0);
+                    setMessage("");
+                  }}
+                >
+                  Sign in here
+                </button>
+              </p>
+            </>
           ) : (
             <p className="mb-0">
               Don't have an account?{" "}
