@@ -163,6 +163,12 @@ export default function AdminDashboard() {
       const data = await response.json();
       
       if (response.ok) {
+        console.log('Orders fetched:', data.orders);
+        // Log first order to check structure
+        if (data.orders && data.orders.length > 0) {
+          console.log('Sample order structure:', data.orders[0]);
+          console.log('Sample order deliveryAddress:', data.orders[0].deliveryAddress);
+        }
         setOrders(data.orders || []);
       }
     } catch (error) {
@@ -1032,6 +1038,7 @@ export default function AdminDashboard() {
                   <th>Order ID</th>
                   <th>Customer</th>
                   <th>Items</th>
+                  <th>Special Instructions</th>
                   <th>Total</th>
                   <th>Status</th>
                   <th>Date</th>
@@ -1054,6 +1061,35 @@ export default function AdminDashboard() {
                       <div style={{ fontSize: '0.875rem' }}>
                         {order.items.slice(0, 2).map(item => item.productName).join(', ')}
                         {order.items.length > 2 && ` +${order.items.length - 2} more`}
+                      </div>
+                    </td>
+                    <td>
+                      <div style={{ 
+                        fontSize: '0.875rem', 
+                        maxWidth: '250px'
+                      }}>
+                        {order.deliveryAddress?.specialRequest ? (
+                          <span 
+                            style={{ 
+                              display: 'inline-block',
+                              padding: '6px 10px', 
+                              backgroundColor: '#fff3cd', 
+                              borderRadius: '4px',
+                              color: '#856404',
+                              fontSize: '0.85rem',
+                              fontWeight: '500',
+                              maxWidth: '100%',
+                              wordWrap: 'break-word',
+                              whiteSpace: 'normal',
+                              lineHeight: '1.4'
+                            }}
+                            title={order.deliveryAddress.specialRequest}
+                          >
+                            📝 {order.deliveryAddress.specialRequest}
+                          </span>
+                        ) : (
+                          <span style={{ color: '#a0aec0', fontSize: '0.85rem' }}>No instructions</span>
+                        )}
                       </div>
                     </td>
                     <td>{formatCurrency(order.pricing.finalTotal)}</td>

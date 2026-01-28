@@ -243,7 +243,7 @@ export default function OrderDetailsModal({ order, isOpen, onClose }) {
             </table>
           </div>
 
-          
+          {/* Special Request / Cooking Instructions */}
           {order.deliveryAddress.specialRequest && (
             <div className="special-request-section" style={{
               padding: '15px',
@@ -262,7 +262,7 @@ export default function OrderDetailsModal({ order, isOpen, onClose }) {
             </div>
           )}
 
-
+          {/* Pricing Summary */
           <div className="pricing-summary">
             <h3 className="section-title">Pricing Breakdown</h3>
             

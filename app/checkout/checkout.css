@@ -826,7 +826,7 @@
   }
 
   .section-header h2 {
-    font-size: 1.1rem !important;
+    font-size: 1rem !important;
   }
 
   /* User Details - Stack vertically on mobile */
@@ -845,7 +845,7 @@
   }
 
   .detail-text {
-    font-size: 0.9rem !important;
+    font-size: 0.8rem !important;
     word-break: break-word !important;
     flex: 1 !important;
   }
@@ -863,21 +863,21 @@
   }
 
   .payment-title {
-    font-size: 1rem !important;
+    font-size: 0.9rem !important;
   }
 
   .payment-subtitle {
-    font-size: 0.85rem !important;
+    font-size: 0.75rem !important;
   }
 
   .payment-total {
-    font-size: 1rem !important;
+    font-size: 0.9rem !important;
   }
 
   .place-order-btn {
     width: 100% !important;
     padding: 1rem !important;
-    font-size: 1rem !important;
+    font-size: 0.95rem !important;
     margin-top: 1rem !important;
   }
 
@@ -888,8 +888,20 @@
   }
 
   .item-name {
-    font-size: 1rem !important;
+    font-size: 0.9rem !important;
     line-height: 1.3 !important;
+  }
+
+  .item-variant {
+    font-size: 0.75rem !important;
+  }
+
+  .item-price {
+    font-size: 0.85rem !important;
+  }
+
+  .item-total {
+    font-size: 0.9rem !important;
   }
 
   /* Bill Details */
@@ -899,7 +911,11 @@
 
   .bill-row {
     padding: 0.5rem 0 !important;
-    font-size: 0.95rem !important;
+    font-size: 0.85rem !important;
+  }
+
+  .bill-total {
+    font-size: 1rem !important;
   }
 
   /* Hide delivery time and payment sections on mobile - use fixed bottom instead */
@@ -932,7 +948,7 @@
   }
 
   .mobile-delivery-time {
-    font-size: 0.9rem !important;
+    font-size: 0.8rem !important;
     color: #333 !important;
     margin-bottom: 0.75rem !important;
     line-height: 1.3 !important;
@@ -953,21 +969,21 @@
   .mobile-address-label {
     font-weight: 600 !important;
     color: #333 !important;
-    font-size: 0.95rem !important;
+    font-size: 0.85rem !important;
   }
 
   .mobile-change-btn {
     background: none !important;
     border: none !important;
     color: #123f31 !important;
-    font-size: 0.9rem !important;
+    font-size: 0.8rem !important;
     font-weight: 500 !important;
     cursor: pointer !important;
     padding: 0 !important;
   }
 
   .mobile-address-text {
-    font-size: 0.85rem !important;
+    font-size: 0.75rem !important;
     color: #666 !important;
     line-height: 1.3 !important;
     max-width: 100% !important;
@@ -989,7 +1005,7 @@
   }
 
   .mobile-total-amount {
-    font-size: 1.5rem !important;
+    font-size: 1.3rem !important;
     font-weight: 700 !important;
     color: #333 !important;
   }

@@ -78,6 +78,7 @@ export default function CheckoutPage() {
   const [manualAddress, setManualAddress] = useState<string>('');
   const [addressError, setAddressError] = useState<boolean>(false);
   const addressInputRef = useRef<HTMLTextAreaElement>(null);
+  const [specialRequest, setSpecialRequest] = useState<string>('');
 
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -476,7 +477,8 @@ export default function CheckoutPage() {
                   deliveryAddress: {
                     address: manualAddress || deliveryAddress.address || userLocation?.address || 'No address provided',
                     lat: userLocation?.lat,
-                    lng: userLocation?.lng
+                    lng: userLocation?.lng,
+                    specialRequest: specialRequest || ''
                   },
                   addressDetails,
                   subtotal,
@@ -580,7 +582,8 @@ export default function CheckoutPage() {
             deliveryAddress: {
               address: manualAddress || deliveryAddress.address || userLocation?.address || 'No address provided',
               lat: userLocation?.lat,
-              lng: userLocation?.lng
+              lng: userLocation?.lng,
+              specialRequest: specialRequest || ''
             },
             addressDetails,
             subtotal,
@@ -706,10 +709,6 @@ export default function CheckoutPage() {
               <div className="detail-item">
                 <span className="detail-icon">📞</span>
                 <span className="detail-text">{customerInfo.phone}</span>
-              </div>
-              <div className="detail-item">
-                <span className="detail-icon">📧</span>
-                <span className="detail-text">{customerInfo.email}</span>
               </div>
             </div>
             )}
@@ -943,6 +942,8 @@ export default function CheckoutPage() {
                 type="text" 
                 placeholder="Enter your special request"
                 className="request-input"
+                value={specialRequest}
+                onChange={(e) => setSpecialRequest(e.target.value)}
               />
             </div>
           </div>

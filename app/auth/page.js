@@ -9,7 +9,6 @@ import "./auth.css";
 function AuthPageContent() {
   const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
@@ -88,17 +87,13 @@ function AuthPageContent() {
           setMessage("Please enter your full name");
           return;
         }
-        if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-          setMessage("Please enter a valid email address");
-          return;
-        }
         if (!mobile || !/^[0-9]{10}$/.test(mobile)) {
           setMessage("Please enter a valid 10-digit mobile number");
           return;
         }
 
         endpoint = buildApiUrl(config.api.endpoints.auth.signup);
-        body = { username, fullName, email, mobile, password };
+        body = { username, fullName, mobile, password };
       } else {
         // Login flow
         if (loginMethod === "password") {
@@ -213,24 +208,6 @@ function AuthPageContent() {
                 placeholder="Enter your full name"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                required={isSignup}
-              />
-            </div>
-          )}
-
-          {/* Email - only for signup */}
-          {isSignup && (
-            <div className="mb-3">
-              <label htmlFor="email" className="form-label fw-bold">
-                Email Address
-              </label>
-              <input
-                type="email"
-                id="email"
-                className="form-control"
-                placeholder="Enter your email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
                 required={isSignup}
               />
             </div>
