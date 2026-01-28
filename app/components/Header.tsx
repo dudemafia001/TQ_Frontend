@@ -75,6 +75,7 @@ export default function Header() {
         <nav className="header-nav desktop-nav">
           <Link href="/" className="nav-item">Menu</Link>
           <Link href="/healthy" className="nav-item">Healthy</Link>
+          <Link href="/blog" className="nav-item">Blog</Link>
           <Link href="/about" className="nav-item">About Us</Link>
           <Link href="/services" className="nav-item">Service</Link>
           <Link href="/contact" className="nav-item">Contact</Link>
@@ -207,6 +208,9 @@ export default function Header() {
                 <Link href="/healthy" className="mobile-nav-item" onClick={closeMobileMenu}>
                   Healthy
                 </Link>
+                <Link href="/blog" className="mobile-nav-item" onClick={closeMobileMenu}>
+                  Blog
+                </Link>
                 <Link href="/about" className="mobile-nav-item" onClick={closeMobileMenu}>
                   About Us
                 </Link>
@@ -241,6 +245,16 @@ export default function Header() {
                 <circle cx="16" cy="10" r="1"></circle>
               </svg>
               <span>Healthy</span>
+            </Link>
+            <Link href="/blog" className={`bottom-nav-item ${pathname === '/blog' || pathname?.startsWith('/blog/') ? 'active' : ''}`}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+              <span>Blog</span>
             </Link>
             <Link href="/services" className={`bottom-nav-item ${pathname === '/services' ? 'active' : ''}`}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

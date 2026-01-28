@@ -22,9 +22,53 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "The Quisine - Food Delivery",
-  description: "Delicious food delivered fresh to your doorstep",
+  title: "The Quisine - Fresh Food Delivery | Order Online",
+  description: "Order delicious, fresh food delivered to your doorstep. Browse our menu of healthy meals, traditional favorites, and daily specials. Fast delivery, great taste!",
+  keywords: [
+    "food delivery",
+    "online food order",
+    "restaurant delivery",
+    "fresh meals",
+    "healthy food delivery",
+    "The Quisine",
+    "food ordering app",
+    "meal delivery service",
+    "quick meal delivery"
+  ],
+  authors: [{ name: "The Quisine" }],
   viewport: "width=device-width, initial-scale=1, maximum-scale=5",
+  openGraph: {
+    title: "The Quisine - Fresh Food Delivery",
+    description: "Order delicious, fresh food delivered to your doorstep",
+    type: "website",
+    url: "https://thequisine.com",
+    siteName: "The Quisine",
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "The Quisine Food Delivery"
+      }
+    ]
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "The Quisine - Fresh Food Delivery",
+    description: "Order delicious, fresh food delivered to your doorstep",
+    images: ["/og-image.jpg"]
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    }
+  }
 };
 
 export default function RootLayout({

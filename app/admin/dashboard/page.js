@@ -69,6 +69,30 @@ export default function AdminDashboard() {
     inStock: true
   });
 
+  // Blogs section state
+  const [blogs, setBlogs] = useState([]);
+  const [blogsLoading, setBlogsLoading] = useState(false);
+  const [blogFilters, setBlogFilters] = useState({ status: 'all', page: 1, limit: 20 });
+  const [editingBlog, setEditingBlog] = useState(null);
+  const [showBlogModal, setShowBlogModal] = useState(false);
+  const [blogStats, setBlogStats] = useState(null);
+  const [blogFormData, setBlogFormData] = useState({
+    title: '',
+    slug: '',
+    excerpt: '',
+    content: '',
+    featuredImage: '',
+    metaTitle: '',
+    metaDescription: '',
+    metaKeywords: '',
+    category: 'Food',
+    tags: '',
+    author: 'The Quisine Team',
+    readTime: 5,
+    isPublished: false
+  });
+  const [uploadingImage, setUploadingImage] = useState(false);
+
   useEffect(() => {
     if (!loading && !isAuthenticated) {
       router.push('/admin');
@@ -100,6 +124,15 @@ export default function AdminDashboard() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, activeSection]);
+
+  // Load blogs when blogs section is active
+  useEffect(() => {
+    if (isAuthenticated && activeSection === 'blogs') {
+      fetchBlogs();
+      fetchBlogStats();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, activeSection, blogFilters]);
 
   // Load orders when filters are applied
   useEffect(() => {
@@ -500,6 +533,208 @@ export default function AdminDashboard() {
     return subjects[subject] || subject;
   };
 
+  // Blog management functions
+  const fetchBlogs = async () => {
+    try {
+      setBlogsLoading(true);
+      const queryParams = new URLSearchParams(blogFilters);
+      const response = await fetch(buildApiUrl(`/api/admin/blogs?${queryParams}`));
+      const data = await response.json();
+      
+      if (response.ok) {
+        setBlogs(data.blogs || []);
+      }
+    } catch (error) {
+      console.error('Error fetching blogs:', error);
+    } finally {
+      setBlogsLoading(false);
+    }
+  };
+
+  const fetchBlogStats = async () => {
+    try {
+      const response = await fetch(buildApiUrl('/api/admin/blogs/stats/overview'));
+      const data = await response.json();
+      
+      if (response.ok) {
+        setBlogStats(data);
+      }
+    } catch (error) {
+      console.error('Error fetching blog stats:', error);
+    }
+  };
+
+  const handleBlogInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setBlogFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      alert('Please upload a valid image file (JPG, PNG, GIF, or WebP)');
+      return;
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image size must be less than 5MB');
+      return;
+    }
+
+    try {
+      setUploadingImage(true);
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await fetch(buildApiUrl('/api/upload/blog-image'), {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setBlogFormData(prev => ({
+          ...prev,
+          featuredImage: data.imageUrl
+        }));
+        alert('Image uploaded successfully!');
+      } else {
+        alert(data.error || 'Failed to upload image');
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('Failed to upload image');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleBlogSubmit = async (e) => {
+    e.preventDefault();
+    
+    try {
+      const blogData = {
+        ...blogFormData,
+        metaKeywords: blogFormData.metaKeywords.split(',').map(k => k.trim()).filter(k => k),
+        tags: blogFormData.tags.split(',').map(t => t.trim()).filter(t => t),
+        readTime: parseInt(blogFormData.readTime) || 5
+      };
+
+      const url = editingBlog 
+        ? buildApiUrl(`/api/admin/blogs/${editingBlog._id}`)
+        : buildApiUrl('/api/admin/blogs');
+      
+      const method = editingBlog ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(blogData)
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(editingBlog ? 'Blog updated successfully!' : 'Blog created successfully!');
+        setShowBlogModal(false);
+        resetBlogForm();
+        fetchBlogs();
+        fetchBlogStats();
+      } else {
+        alert(`Error: ${data.message}`);
+      }
+    } catch (error) {
+      console.error('Error saving blog:', error);
+      alert('Error saving blog');
+    }
+  };
+
+  const handleEditBlog = (blog) => {
+    setEditingBlog(blog);
+    setBlogFormData({
+      title: blog.title,
+      slug: blog.slug,
+      excerpt: blog.excerpt,
+      content: blog.content,
+      featuredImage: blog.featuredImage || '',
+      metaTitle: blog.metaTitle || '',
+      metaDescription: blog.metaDescription || '',
+      metaKeywords: (blog.metaKeywords || []).join(', '),
+      category: blog.category,
+      tags: (blog.tags || []).join(', '),
+      author: blog.author,
+      readTime: blog.readTime,
+      isPublished: blog.isPublished
+    });
+    setShowBlogModal(true);
+  };
+
+  const handleDeleteBlog = async (id) => {
+    if (!confirm('Are you sure you want to delete this blog?')) return;
+
+    try {
+      const response = await fetch(buildApiUrl(`/api/admin/blogs/${id}`), {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        alert('Blog deleted successfully!');
+        fetchBlogs();
+        fetchBlogStats();
+      }
+    } catch (error) {
+      console.error('Error deleting blog:', error);
+      alert('Error deleting blog');
+    }
+  };
+
+  const handleTogglePublishBlog = async (id) => {
+    try {
+      const response = await fetch(buildApiUrl(`/api/admin/blogs/${id}/toggle-publish`), {
+        method: 'PATCH'
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(data.message);
+        fetchBlogs();
+        fetchBlogStats();
+      }
+    } catch (error) {
+      console.error('Error toggling publish status:', error);
+      alert('Error updating blog status');
+    }
+  };
+
+  const resetBlogForm = () => {
+    setEditingBlog(null);
+    setBlogFormData({
+      title: '',
+      slug: '',
+      excerpt: '',
+      content: '',
+      featuredImage: '',
+      metaTitle: '',
+      metaDescription: '',
+      metaKeywords: '',
+      category: 'Food',
+      tags: '',
+      author: 'The Quisine Team',
+      readTime: 5,
+      isPublished: false
+    });
+  };
+
   const getQueryStatusColor = (status) => {
     switch (status) {
       case 'new': return 'status-new';
@@ -541,10 +776,6 @@ export default function AdminDashboard() {
     router.push('/admin');
   };
 
-  if (loading || !isAuthenticated) {
-    return <div>Loading...</div>;
-  }
-
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -565,6 +796,10 @@ export default function AdminDashboard() {
   const getStatusBadgeClass = (status) => {
     return `status-badge status-${status}`;
   };
+
+  if (loading || !isAuthenticated) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="admin-dashboard">
@@ -630,6 +865,16 @@ export default function AdminDashboard() {
           >
             <span className="nav-icon">🍽️</span>
             Products
+          </div>
+          <div 
+            className={`nav-item ${activeSection === 'blogs' ? 'active' : ''}`}
+            onClick={() => {
+              setActiveSection('blogs');
+              closeMobileMenu();
+            }}
+          >
+            <span className="nav-icon">📝</span>
+            Blogs
           </div>
           <div 
             className={`nav-item ${activeSection === 'siteStatus' ? 'active' : ''}`}
@@ -1172,6 +1417,217 @@ export default function AdminDashboard() {
           </div>
         )}
 
+        {activeSection === 'blogs' && (
+          <div className="content-section">
+            <div className="section-header">
+              <h2 className="section-title">Blog Management</h2>
+              <button 
+                className="primary-button"
+                onClick={() => {
+                  resetBlogForm();
+                  setShowBlogModal(true);
+                }}
+                style={{ 
+                  padding: '0.75rem 1.5rem',
+                  backgroundColor: '#f97316',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '600'
+                }}
+              >
+                + Create New Blog
+              </button>
+            </div>
+
+            {/* Blog Stats */}
+            {blogStats && (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                gap: '15px',
+                marginBottom: '30px',
+                padding: '0 2rem'
+              }}>
+                <div style={{
+                  background: 'white',
+                  padding: '20px',
+                  borderRadius: '8px',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                  textAlign: 'center'
+                }}>
+                  <h3 style={{ fontSize: '32px', margin: '0 0 10px 0', color: '#f97316' }}>{blogStats.totalBlogs}</h3>
+                  <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>Total Blogs</p>
+                </div>
+                <div style={{
+                  background: 'white',
+                  padding: '20px',
+                  borderRadius: '8px',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                  textAlign: 'center'
+                }}>
+                  <h3 style={{ fontSize: '32px', margin: '0 0 10px 0', color: '#f97316' }}>{blogStats.publishedBlogs}</h3>
+                  <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>Published</p>
+                </div>
+                <div style={{
+                  background: 'white',
+                  padding: '20px',
+                  borderRadius: '8px',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                  textAlign: 'center'
+                }}>
+                  <h3 style={{ fontSize: '32px', margin: '0 0 10px 0', color: '#f97316' }}>{blogStats.draftBlogs}</h3>
+                  <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>Drafts</p>
+                </div>
+                <div style={{
+                  background: 'white',
+                  padding: '20px',
+                  borderRadius: '8px',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                  textAlign: 'center'
+                }}>
+                  <h3 style={{ fontSize: '32px', margin: '0 0 10px 0', color: '#f97316' }}>{blogStats.totalViews}</h3>
+                  <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>Total Views</p>
+                </div>
+                <div style={{
+                  background: 'white',
+                  padding: '20px',
+                  borderRadius: '8px',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                  textAlign: 'center'
+                }}>
+                  <h3 style={{ fontSize: '32px', margin: '0 0 10px 0', color: '#f97316' }}>{blogStats.totalLikes}</h3>
+                  <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>Total Likes</p>
+                </div>
+              </div>
+            )}
+
+            {/* Filters */}
+            <div style={{ padding: '0 2rem 20px', display: 'flex', gap: '10px' }}>
+              <select 
+                value={blogFilters.status}
+                onChange={(e) => setBlogFilters({ ...blogFilters, status: e.target.value, page: 1 })}
+                style={{
+                  padding: '10px 15px',
+                  border: '1px solid #ddd',
+                  borderRadius: '5px',
+                  fontSize: '14px'
+                }}
+              >
+                <option value="all">All Status</option>
+                <option value="published">Published</option>
+                <option value="draft">Draft</option>
+              </select>
+            </div>
+
+            {/* Blog List */}
+            {blogsLoading ? (
+              <div style={{ textAlign: 'center', padding: '40px' }}>
+                <p>Loading blogs...</p>
+              </div>
+            ) : (
+              <div style={{ padding: '0 2rem' }}>
+                <table className="admin-table" style={{ width: '100%', backgroundColor: 'white', borderRadius: '8px', overflow: 'hidden' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
+                      <th style={{ padding: '15px', textAlign: 'left' }}>Title</th>
+                      <th style={{ padding: '15px', textAlign: 'left' }}>Category</th>
+                      <th style={{ padding: '15px', textAlign: 'left' }}>Status</th>
+                      <th style={{ padding: '15px', textAlign: 'center' }}>Views</th>
+                      <th style={{ padding: '15px', textAlign: 'center' }}>Likes</th>
+                      <th style={{ padding: '15px', textAlign: 'left' }}>Published Date</th>
+                      <th style={{ padding: '15px', textAlign: 'center' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {blogs.map(blog => (
+                      <tr key={blog._id} style={{ borderBottom: '1px solid #dee2e6' }}>
+                        <td style={{ padding: '15px' }}>
+                          <strong>{blog.title}</strong>
+                          <br />
+                          <small style={{ color: '#666' }}>{blog.excerpt.substring(0, 60)}...</small>
+                        </td>
+                        <td style={{ padding: '15px' }}>{blog.category}</td>
+                        <td style={{ padding: '15px' }}>
+                          <span style={{
+                            display: 'inline-block',
+                            padding: '4px 12px',
+                            borderRadius: '12px',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            background: blog.isPublished ? '#d4edda' : '#fff3cd',
+                            color: blog.isPublished ? '#155724' : '#856404'
+                          }}>
+                            {blog.isPublished ? 'Published' : 'Draft'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '15px', textAlign: 'center' }}>{blog.views}</td>
+                        <td style={{ padding: '15px', textAlign: 'center' }}>{blog.likes}</td>
+                        <td style={{ padding: '15px' }}>
+                          {blog.publishedAt 
+                            ? new Date(blog.publishedAt).toLocaleDateString()
+                            : '-'
+                          }
+                        </td>
+                        <td style={{ padding: '15px' }}>
+                          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                            <button 
+                              onClick={() => handleEditBlog(blog)}
+                              style={{
+                                padding: '6px 12px',
+                                background: '#007bff',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontSize: '13px',
+                                fontWeight: '500'
+                              }}
+                            >
+                              Edit
+                            </button>
+                            <button 
+                              onClick={() => handleTogglePublishBlog(blog._id)}
+                              style={{
+                                padding: '6px 12px',
+                                background: blog.isPublished ? '#ffc107' : '#28a745',
+                                color: blog.isPublished ? '#333' : 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontSize: '13px',
+                                fontWeight: '500'
+                              }}
+                            >
+                              {blog.isPublished ? 'Unpublish' : 'Publish'}
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteBlog(blog._id)}
+                              style={{
+                                padding: '6px 12px',
+                                background: '#dc3545',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontSize: '13px',
+                                fontWeight: '500'
+                              }}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
         {activeSection === 'siteStatus' && (
           <div className="content-section">
             <div className="section-header">
@@ -1680,6 +2136,318 @@ export default function AdminDashboard() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Blog Modal */}
+      {showBlogModal && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000,
+            padding: '20px'
+          }}
+          onClick={() => setShowBlogModal(false)}
+        >
+          <div 
+            style={{
+              background: 'white',
+              borderRadius: '10px',
+              maxWidth: '900px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflow: 'auto'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ 
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '20px',
+              borderBottom: '1px solid #dee2e6'
+            }}>
+              <h2 style={{ margin: 0 }}>{editingBlog ? 'Edit Blog' : 'Create New Blog'}</h2>
+              <button 
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '32px',
+                  cursor: 'pointer',
+                  color: '#999'
+                }}
+                onClick={() => setShowBlogModal(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            <form onSubmit={handleBlogSubmit} style={{ padding: '20px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>Title *</label>
+                  <input
+                    type="text"
+                    name="title"
+                    value={blogFormData.title}
+                    onChange={handleBlogInputChange}
+                    required
+                    style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '5px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>Slug</label>
+                  <input
+                    type="text"
+                    name="slug"
+                    value={blogFormData.slug}
+                    onChange={handleBlogInputChange}
+                    placeholder="auto-generated-from-title"
+                    style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '5px' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>Excerpt * (Max 200 chars)</label>
+                <textarea
+                  name="excerpt"
+                  value={blogFormData.excerpt}
+                  onChange={handleBlogInputChange}
+                  maxLength={200}
+                  rows={2}
+                  required
+                  style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '5px', resize: 'vertical' }}
+                />
+                <small style={{ color: '#666' }}>{blogFormData.excerpt.length}/200</small>
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>Content *</label>
+                <textarea
+                  name="content"
+                  value={blogFormData.content}
+                  onChange={handleBlogInputChange}
+                  rows={15}
+                  required
+                  placeholder="Write your blog content here..."
+                  style={{ 
+                    width: '100%', 
+                    padding: '15px', 
+                    border: '1px solid #ddd', 
+                    borderRadius: '5px', 
+                    resize: 'vertical',
+                    fontSize: '14px',
+                    lineHeight: '1.6'
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>Featured Image</label>
+                
+                {/* File Upload Input */}
+                <div style={{ marginBottom: '10px' }}>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    disabled={uploadingImage}
+                    style={{ 
+                      width: '100%', 
+                      padding: '10px', 
+                      border: '1px solid #ddd', 
+                      borderRadius: '5px',
+                      cursor: uploadingImage ? 'not-allowed' : 'pointer'
+                    }}
+                  />
+                  {uploadingImage && (
+                    <div style={{ marginTop: '8px', color: '#123f31', fontSize: '14px' }}>
+                      ⏳ Uploading image...
+                    </div>
+                  )}
+                </div>
+
+                {/* Preview and Current Image */}
+                {blogFormData.featuredImage && (
+                  <div style={{ marginTop: '10px' }}>
+                    <img 
+                      src={blogFormData.featuredImage} 
+                      alt="Preview" 
+                      style={{ 
+                        maxWidth: '200px', 
+                        maxHeight: '150px', 
+                        border: '2px solid #ddd', 
+                        borderRadius: '8px',
+                        objectFit: 'cover'
+                      }} 
+                    />
+                    <div style={{ marginTop: '5px', fontSize: '12px', color: '#666' }}>
+                      Current: {blogFormData.featuredImage}
+                    </div>
+                  </div>
+                )}
+                
+                <small style={{ color: '#666', fontSize: '12px', display: 'block', marginTop: '5px' }}>
+                  📤 Upload an image (JPG, PNG, GIF, WebP) - Max 5MB
+                </small>
+              </div>
+
+              <div style={{ fontSize: '18px', fontWeight: '600', margin: '25px 0 15px 0', paddingBottom: '10px', borderBottom: '2px solid #f97316' }}>
+                SEO Settings
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>Meta Title (Max 60 chars)</label>
+                <input
+                  type="text"
+                  name="metaTitle"
+                  value={blogFormData.metaTitle}
+                  onChange={handleBlogInputChange}
+                  maxLength={60}
+                  placeholder="Leave empty to use blog title"
+                  style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '5px' }}
+                />
+                <small style={{ color: '#666' }}>{blogFormData.metaTitle.length}/60</small>
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>Meta Description (Max 160 chars)</label>
+                <textarea
+                  name="metaDescription"
+                  value={blogFormData.metaDescription}
+                  onChange={handleBlogInputChange}
+                  maxLength={160}
+                  rows={2}
+                  placeholder="Leave empty to use excerpt"
+                  style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '5px', resize: 'vertical' }}
+                />
+                <small style={{ color: '#666' }}>{blogFormData.metaDescription.length}/160</small>
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>Meta Keywords (comma-separated)</label>
+                <input
+                  type="text"
+                  name="metaKeywords"
+                  value={blogFormData.metaKeywords}
+                  onChange={handleBlogInputChange}
+                  placeholder="food, recipe, healthy eating, delivery"
+                  style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '5px' }}
+                />
+              </div>
+
+              <div style={{ fontSize: '18px', fontWeight: '600', margin: '25px 0 15px 0', paddingBottom: '10px', borderBottom: '2px solid #f97316' }}>
+                Additional Info
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>Category</label>
+                  <select
+                    name="category"
+                    value={blogFormData.category}
+                    onChange={handleBlogInputChange}
+                    style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '5px' }}
+                  >
+                    <option value="bulk food">Bulk Food</option>
+                    <option value="catering">Catering</option>
+                    <option value="Food">Food</option>
+                    <option value="Thali">Thali</option>
+                    <option value="snack box">Snack Box</option>
+                    <option value="meals">Meals</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>Read Time (minutes)</label>
+                  <input
+                    type="number"
+                    name="readTime"
+                    value={blogFormData.readTime}
+                    onChange={handleBlogInputChange}
+                    min="1"
+                    style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '5px' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>Tags (comma-separated)</label>
+                <input
+                  type="text"
+                  name="tags"
+                  value={blogFormData.tags}
+                  onChange={handleBlogInputChange}
+                  placeholder="healthy, vegan, quick meal"
+                  style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '5px' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600' }}>Author</label>
+                <input
+                  type="text"
+                  name="author"
+                  value={blogFormData.author}
+                  onChange={handleBlogInputChange}
+                  style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '5px' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    name="isPublished"
+                    checked={blogFormData.isPublished}
+                    onChange={handleBlogInputChange}
+                    style={{ width: '18px', height: '18px' }}
+                  />
+                  <span style={{ fontWeight: '600' }}>Publish immediately</span>
+                </label>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', padding: '20px 0', borderTop: '1px solid #dee2e6' }}>
+                <button 
+                  type="button" 
+                  onClick={() => setShowBlogModal(false)}
+                  style={{
+                    padding: '10px 20px',
+                    border: '1px solid #ddd',
+                    background: 'white',
+                    color: '#333',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                    fontWeight: '600'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  style={{
+                    padding: '10px 20px',
+                    border: 'none',
+                    background: '#f97316',
+                    color: 'white',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                    fontWeight: '600'
+                  }}
+                >
+                  {editingBlog ? 'Update Blog' : 'Create Blog'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

@@ -298,7 +298,7 @@ export default function CheckoutPage() {
   }, []);
 
   // Constants
-  const minimumCashAmount = 499;
+  const minimumCashAmount = 349;
   const packagingCharge = 20;
   const deliveryCharge = 0;
 
