@@ -490,7 +490,19 @@ export default function CheckoutPage() {
               })
             });
             
+            console.log('Verify API Response Status:', verifyResponse.status);
+            console.log('Verify API Response OK:', verifyResponse.ok);
+            
+            if (!verifyResponse.ok) {
+              console.error('Verify API failed with status:', verifyResponse.status);
+              const errorText = await verifyResponse.text();
+              console.error('Error response:', errorText);
+              throw new Error(`Payment verification API failed: ${verifyResponse.status} - ${errorText}`);
+            }
+            
             const verifyResult = await verifyResponse.json();
+            console.log('Verification result:', verifyResult);
+            
             if (verifyResult.success) {
               console.log('Order saved successfully');
               
@@ -504,10 +516,12 @@ export default function CheckoutPage() {
               
               router.push('/checkout/success');
             } else {
+              console.error('Verification failed:', verifyResult);
               throw new Error(verifyResult.message || 'Payment verification failed');
             }
           } catch (error) {
             console.error('Error verifying payment:', error);
+            console.error('Error details:', JSON.stringify(error, null, 2));
             alert('Payment successful but order could not be saved. Please contact support with payment ID: ' + response.razorpay_payment_id);
           }
         },
