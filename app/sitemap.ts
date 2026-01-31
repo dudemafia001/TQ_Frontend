@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 import config, { buildApiUrl } from '../config/index';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://thequisine.com';
+  const baseUrl = 'https://www.thequisine.in';
 
   // Static pages
   const staticPages = [

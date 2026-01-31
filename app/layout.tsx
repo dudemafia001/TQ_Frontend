@@ -42,11 +42,11 @@ export const metadata: Metadata = {
     title: "The Quisine - Fresh Food Delivery",
     description: "Order delicious, fresh food delivered to your doorstep",
     type: "website",
-    url: "https://thequisine.com",
+    url: "https://www.thequisine.in",
     siteName: "The Quisine",
     images: [
       {
-        url: "/og-image.jpg",
+        url: "https://www.thequisine.in/og-image.jpg",
         width: 1200,
         height: 630,
         alt: "The Quisine Food Delivery"
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "The Quisine - Fresh Food Delivery",
     description: "Order delicious, fresh food delivered to your doorstep",
-    images: ["/og-image.jpg"]
+    images: ["https://www.thequisine.in/og-image.jpg"]
   },
   robots: {
     index: true,

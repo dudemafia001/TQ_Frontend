@@ -26,6 +26,6 @@ export default function robots(): MetadataRoute.Robots {
         ]
       }
     ],
-    sitemap: 'https://thequisine.com/sitemap.xml'
+    sitemap: 'https://www.thequisine.in/sitemap.xml'
   };
 }
