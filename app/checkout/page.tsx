@@ -161,7 +161,7 @@ export default function CheckoutPage() {
             if (data.success && data.user) {
               setCustomerInfo({
                 fullName: data.user.fullName || user,
-                phone: data.user.mobile || '',
+                phone: data.user.mobile || user || '',
                 email: data.user.email || `${user}@example.com`  // Fallback email if not stored
               });
             } else {
@@ -175,7 +175,7 @@ export default function CheckoutPage() {
           // Fallback to basic user data from context
           setCustomerInfo({
             fullName: fullName || user,
-            phone: '',  // Empty phone if we can't fetch it
+            phone: user || '',  // user IS the mobile number from OTP auth
             email: `${user}@example.com`  // Fallback email
           });
         }
@@ -621,7 +621,10 @@ export default function CheckoutPage() {
         
         router.push('/checkout/success');
       } else {
-        alert(result.message || 'Failed to place cash order');
+        console.error('Order validation errors:', result.errors);
+        alert((result.errors && result.errors.length > 0)
+          ? `Order failed: ${result.errors.join(', ')}`
+          : (result.message || 'Failed to place cash order'));
       }
       
     } catch (error) {
