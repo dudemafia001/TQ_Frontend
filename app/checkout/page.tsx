@@ -442,7 +442,24 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           amount: finalTotal,
           currency: 'INR',
-          receipt: `order_${Date.now()}`
+          receipt: `order_${Date.now()}`,
+          orderDetails: {
+            userId: user,
+            cartItems,
+            customerInfo,
+            deliveryAddress: {
+              address: manualAddress || deliveryAddress.address || userLocation?.address || 'No address provided',
+              lat: userLocation?.lat,
+              lng: userLocation?.lng,
+              specialRequest: specialRequest || ''
+            },
+            addressDetails,
+            subtotal,
+            packagingCharge,
+            couponDiscount,
+            finalTotal,
+            appliedCoupon
+          }
         })
       });
 
@@ -526,9 +543,23 @@ export default function CheckoutPage() {
           }
         },
         modal: {
-          ondismiss: function() {
+          ondismiss: async function() {
             console.log('Payment modal dismissed');
             setIsProcessingPayment(false);
+            // Check if the payment was actually captured even though modal was dismissed
+            try {
+              const statusRes = await fetch(buildApiUrl(`/api/payments/order-status/${orderData.order.id}`));
+              if (statusRes.ok) {
+                const statusData = await statusRes.json();
+                if (statusData.success && statusData.paid) {
+                  alert('Your payment was successful! Your order is being processed. If you don\'t see it in your orders shortly, please contact support.');
+                  router.push('/checkout/success');
+                  return;
+                }
+              }
+            } catch (e) {
+              console.log('Could not check payment status after dismiss');
+            }
           },
           escape: true,
           backdropclose: false
