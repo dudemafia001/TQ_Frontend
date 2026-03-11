@@ -105,11 +105,9 @@ export default function Home() {
       ? p.category.toLowerCase().trim() === selectedCategory.toLowerCase().trim()
       : true;
     
-    // Filter by search query
+    // Filter by search query (product name only)
     const matchesSearch = searchQuery
-      ? p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.category.toLowerCase().includes(searchQuery.toLowerCase())
+      ? p.name.toLowerCase().includes(searchQuery.toLowerCase())
       : true;
     
     return matchesCategory && matchesSearch;

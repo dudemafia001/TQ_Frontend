@@ -299,6 +299,7 @@ export default function CheckoutPage() {
   }, []);
 
   // Constants
+  const minimumOrderAmount = 249;
   const minimumCashAmount = 349;
   const packagingCharge = 20;
   const deliveryCharge = 0;
@@ -307,6 +308,7 @@ export default function CheckoutPage() {
   const subtotal = (cartItems || []).reduce((sum: number, item: CartItemType) => sum + ((item.price || 0) * item.quantity), 0);
   const finalTotal = subtotal + packagingCharge + deliveryCharge - couponDiscount;
   const isEligibleForCash = finalTotal >= minimumCashAmount;
+  const isBelowMinimumOrder = subtotal < minimumOrderAmount;
 
   // Show loading while auth is being checked
   if (authLoading) {
@@ -390,6 +392,12 @@ export default function CheckoutPage() {
   };
 
   const handlePlaceOrder = async () => {
+    // Validate minimum order amount
+    if (isBelowMinimumOrder) {
+      alert(`⚠️ Minimum order amount is ₹${minimumOrderAmount}. Your current cart total is ₹${subtotal.toFixed(2)}. Please add more items.`);
+      return;
+    }
+
     // Validate site status and operating hours
     if (!siteStatus.canAcceptOrders) {
       if (!siteStatus.isOpen) {
@@ -1088,6 +1096,11 @@ export default function CheckoutPage() {
                 <span>₹{finalTotal.toFixed(2)}</span>
               </div>
             </div>
+            {isBelowMinimumOrder && (
+              <div className="minimum-order-warning" style={{ color: '#d32f2f', fontSize: '13px', marginTop: '8px', padding: '8px 12px', backgroundColor: '#ffeaea', borderRadius: '6px', textAlign: 'center' }}>
+                ⚠️ Minimum order amount is ₹{minimumOrderAmount}. Add ₹{(minimumOrderAmount - subtotal).toFixed(2)} more to place your order.
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -1110,6 +1123,11 @@ export default function CheckoutPage() {
           <button 
             className="payment-btn-mobile"
             onClick={() => {
+              // Check minimum order amount
+              if (isBelowMinimumOrder) {
+                alert(`⚠️ Minimum order amount is ₹${minimumOrderAmount}. Your current cart total is ₹${subtotal.toFixed(2)}. Please add more items.`);
+                return;
+              }
               // Check site status and operating hours
               if (!siteStatus.canAcceptOrders) {
                 if (!siteStatus.isOpen) {
@@ -1142,12 +1160,13 @@ export default function CheckoutPage() {
               }
               setShowPaymentModal(true);
             }}
-            disabled={isProcessingPayment || !deliveryInfo.available || !siteStatus.canAcceptOrders}
+            disabled={isProcessingPayment || !deliveryInfo.available || !siteStatus.canAcceptOrders || isBelowMinimumOrder}
           >
             {isProcessingPayment ? 'Processing...' : 
              !siteStatus.canAcceptOrders ? (
                siteStatus.isOpen ? '⏰ Outside Hours' : '🚫 Closed'
              ) :
+             isBelowMinimumOrder ? `Min. order ₹${minimumOrderAmount}` :
              !deliveryInfo.available ? '❌ Delivery Not Available' : 'Choose payment method'}
           </button>
         </div>
@@ -1225,7 +1244,11 @@ export default function CheckoutPage() {
         </div>
         
         <div className="mobile-payment-section">
-          {!paymentMethod ? (
+          {isBelowMinimumOrder ? (
+            <div className="mobile-minimum-order-warning" style={{ color: '#d32f2f', fontSize: '13px', padding: '12px', backgroundColor: '#ffeaea', borderRadius: '8px', textAlign: 'center', width: '100%' }}>
+              ⚠️ Minimum order ₹{minimumOrderAmount}. Add ₹{(minimumOrderAmount - subtotal).toFixed(2)} more.
+            </div>
+          ) : !paymentMethod ? (
             <button 
               className="mobile-select-payment-btn"
               onClick={() => setShowPaymentModal(true)}
@@ -1266,9 +1289,10 @@ export default function CheckoutPage() {
                   setAddressError(false);
                   handlePlaceOrder();
                 }}
-                disabled={isProcessingPayment || (paymentMethod === 'cash' && !isEligibleForCash)}
+                disabled={isProcessingPayment || isBelowMinimumOrder || (paymentMethod === 'cash' && !isEligibleForCash)}
               >
                 {isProcessingPayment ? 'Processing...' : 
+                 isBelowMinimumOrder ? `Min. order ₹${minimumOrderAmount}` :
                  paymentMethod === 'online' ? 'Proceed to Payment' : 
                  paymentMethod === 'cash' && isEligibleForCash ? 'Place Order' : 
                  'Place Order'}
