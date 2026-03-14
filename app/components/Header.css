@@ -324,13 +324,13 @@
 }
 
 .brand-logo {
-  object-fit: contain;
+  object-fit: none;
   border-radius: 8px;
-  min-width: 200px;
-  /* min-height: 87px; */
+  min-width: 150px;
+  min-height: 87px; 
   transition: transform .2s;
-  width: 80px !important;
-  height: 80px !important;
+  width: 70px !important;
+  height: 70px !important;
 }
 
 .brand-logo:hover {
