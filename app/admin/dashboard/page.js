@@ -195,6 +195,22 @@ export default function AdminDashboard() {
     }
   };
 
+  const syncPendingPayments = async () => {
+    try {
+      const response = await fetch(buildApiUrl('/api/payments/sync-pending'), { method: 'POST' });
+      const data = await response.json();
+      if (data.success) {
+        alert(`✅ Sync complete: ${data.synced} order(s) updated to paid (checked ${data.total} pending).`);
+        fetchOrders();
+        fetchAnalytics();
+      } else {
+        alert('Sync failed: ' + (data.message || 'Unknown error'));
+      }
+    } catch (error) {
+      alert('Sync error: ' + error.message);
+    }
+  };
+
   const fetchAnalytics = async () => {
     try {
       const queryParams = new URLSearchParams();
@@ -1025,6 +1041,14 @@ export default function AdminDashboard() {
                       onClick={handleClearFilters}
                     >
                       Clear
+                    </button>
+                    <button
+                      className="filter-button"
+                      style={{ background: '#1a7a3c', color: '#fff' }}
+                      onClick={syncPendingPayments}
+                      title="Check Razorpay for any paid orders still showing as pending"
+                    >
+                      🔄 Sync Payments
                     </button>
                   </div>
                 </div>

@@ -547,7 +547,10 @@ export default function CheckoutPage() {
           } catch (error) {
             console.error('Error verifying payment:', error);
             console.error('Error details:', JSON.stringify(error, null, 2));
-            alert('Payment successful but order could not be saved. Please contact support with payment ID: ' + response.razorpay_payment_id);
+            // The order was already created before payment started, so it is safe.
+            // It will be auto-synced to 'paid' status by the backend sync job or webhook.
+            alert('Your payment was received! Your order has been placed and will be confirmed shortly. Payment ID: ' + response.razorpay_payment_id);
+            router.push('/checkout/success');
           }
         },
         modal: {
